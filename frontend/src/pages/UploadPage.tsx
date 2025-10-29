@@ -224,9 +224,6 @@ export default function UploadPage() {
                   Start Quiz
                 </Button>
               </div>
-              <div className="text-xs text-muted-foreground text-center">
-                Saved CV ID <code>{String(cvId)}</code> so the Quiz page can auto-generate.
-              </div>
             </CardContent>
           </Card>
         )}
