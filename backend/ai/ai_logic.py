@@ -7,11 +7,14 @@ from pdf2image import convert_from_path
 import pytesseract
 import tempfile
 import re
+import logging
+
+# Setup logging instead of print statements
+logger = logging.getLogger(__name__)
 
 # Load API key
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-print(" API Key Loaded:", GROQ_API_KEY)
 
 #  Extract Text 
 def extract_text_from_pdf(file):
@@ -28,12 +31,12 @@ def extract_text_from_pdf(file):
             text += page.extract_text() or ""
 
         if not text.strip():
-            print(" No text detected — switching to OCR mode...")
+            logger.info("No text detected — switching to OCR mode...")
             images = convert_from_path(temp_path)
             for img in images:
                 text += pytesseract.image_to_string(img)
 
-        print(" Extracted text preview:", text[:400])
+        logger.info(f"Extracted text preview: {text[:400]}")
         return text[:4000]
     finally:
         os.remove(temp_path)
@@ -81,7 +84,7 @@ Do NOT include markdown or extra text.
 
     if response.status_code == 200:
         content = response.json()["choices"][0]["message"]["content"]
-        print(" Raw model output:", content[:500])
+        logger.info(f"Raw model output: {content[:500]}")
 
         match = re.search(r"\[.*\]", content, re.DOTALL)
         if match:
@@ -90,15 +93,15 @@ Do NOT include markdown or extra text.
         try:
             return json.loads(content)
         except json.JSONDecodeError:
-            print("JSON parsing failed. Attempting cleanup...")
+            logger.warning("JSON parsing failed. Attempting cleanup...")
             cleaned = content.strip().replace("```json", "").replace("```", "")
             try:
                 return json.loads(cleaned)
             except Exception:
-                print("\n Invalid JSON after cleanup:\n", cleaned[:500])
+                logger.error(f"Invalid JSON after cleanup: {cleaned[:500]}")
                 return []
     else:
-        print(f" Groq API Error ({response.status_code}): {response.text}")
+        logger.error(f"Groq API Error ({response.status_code}): {response.text}")
         return []
 
 
@@ -134,4 +137,4 @@ Write feedback that:
     if response.status_code == 200:
         return response.json()["choices"][0]["message"]["content"]
     else:
-        return f" Error while generating feedback: {response.text}"
+        return f"Error while generating feedback: {response.text}"
