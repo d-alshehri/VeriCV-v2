@@ -20,8 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key")
 DEBUG = os.getenv("DEBUG", "True") == "True"
-ALLOWED_HOSTS = ["*"]
-
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 
 # Application definition
 
@@ -77,15 +76,39 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 
 
-# Database
+# Database - Supabase PostgreSQL Configuration
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.getenv("DB_NAME", BASE_DIR / "db.sqlite3"),
+# Try Supabase connection first, fallback to legacy env vars
+SUPABASE_DB_URL = os.getenv("SUPABASE_POSTGRES_URL_NON_POOLING") or os.getenv("SUPABASE_POSTGRES_URL")
+
+if SUPABASE_DB_URL:
+    # Parse Supabase connection URL
+    # Format: postgresql://user:password@host:port/database
+    import dj_database_url
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=SUPABASE_DB_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    # Fallback to individual Supabase env vars or legacy configuration
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("SUPABASE_POSTGRES_DATABASE") or os.getenv("DB_NAME", "django"),
+            "USER": os.getenv("SUPABASE_POSTGRES_USER") or os.getenv("DB_USER", "django"),
+            "PASSWORD": os.getenv("SUPABASE_POSTGRES_PASSWORD") or os.getenv("DB_PASSWORD", ""),
+            "HOST": os.getenv("SUPABASE_POSTGRES_HOST") or os.getenv("DB_HOST", "localhost"),
+            "PORT": os.getenv("DB_PORT", "5432"),
+            "OPTIONS": {
+                "sslmode": "require",  # Supabase requires SSL
+            },
+        }
+    }
+
 
 
 # Password validation
@@ -123,7 +146,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
-
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -150,12 +173,24 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Allow local Vite dev server
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-]
-CORS_ALLOWED_ORIGINS = [
-    os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173"),
-]
+
+# CORS Configuration - properly split comma-separated origins
+# CORS Configuration
+if os.getenv("DEBUG", "True") == "True":
+    CORS_ALLOWED_ORIGINS = [
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+    ]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        'https://vericv.app',
+        'https://prod.vericv.app',
+        'http://104.248.136.7',
+    ]
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+# Supabase Configuration
+SUPABASE_URL = os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY") or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
