@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, FileText, CheckCircle, X, LogIn, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { uploadCV } from "@/api/endpoints";
+import { uploadCV, aiGenerateFromCVId } from "@/api/endpoints";
 
 type UploadState = "idle" | "uploading" | "success" | "error" | "unauth";
 
@@ -79,50 +79,82 @@ export default function UploadPage() {
   };
 
   const doUpload = async () => {
-    const token = localStorage.getItem("access");
-    if (!token) {
+  const token = localStorage.getItem("access");
+  if (!token) {
+    setState("unauth");
+    setError("You must be logged in to upload.");
+    return;
+  }
+  if (!uploadedFile) {
+    setError("Please choose a PDF to upload.");
+    return;
+  }
+
+  setState("uploading");
+  setError(null);
+
+  try {
+    // 1. Upload the CV to Django (this saves it in /api/cv/)
+    const res = await uploadCV(uploadedFile);
+    const id = res?.cv_id ?? res?.id ?? res?.cvId;
+    const name = res?.filename ?? uploadedFile.name;
+
+    if (!id) {
+      throw new Error("Upload succeeded but server did not return cv_id.");
+    }
+
+    // Save for other pages to access
+    localStorage.setItem("last_cv_id", String(id));
+    window.dispatchEvent(
+      new StorageEvent("storage", {
+        key: "last_cv_id",
+        newValue: String(id),
+      })
+    );
+
+    setCvId(id);
+    setServerFileName(name);
+
+    // 2. Ask the AI service to generate quiz questions from this CV
+    const aiData = await aiGenerateFromCVId(id);
+    // We expect something like { questions: [...] }
+    const questions = aiData?.questions ?? aiData ?? [];
+
+    // Store the questions so QuizPage can use them
+    localStorage.setItem("ai_questions", JSON.stringify(questions));
+
+    // 3. Mark upload done
+    setState("success");
+
+    toast({
+      title: "Upload & Analysis Complete!",
+      description: "Your personalized quiz is ready.",
+    });
+  } catch (e: any) {
+    const status = e?.response?.status;
+    if (status === 401 || status === 403) {
       setState("unauth");
-      setError("You must be logged in to upload.");
+      setError("Authentication required. Please log in.");
       return;
     }
-    if (!uploadedFile) {
-      setError("Please choose a PDF to upload.");
-      return;
-    }
-    setState("uploading");
-    setError(null);
 
-    try {
-      const res = await uploadCV(uploadedFile); // tries /cv/upload/, fallback /cv/
-      const id = res?.cv_id ?? res?.id ?? res?.cvId;
-      const name = res?.filename ?? uploadedFile.name;
-      if (!id) throw new Error("Upload succeeded but server did not return cv_id.");
+    const msg =
+      e?.response?.data?.error ||
+      e?.response?.data?.detail ||
+      e?.message ||
+      "Upload failed.";
 
-      localStorage.setItem("last_cv_id", String(id));
-      window.dispatchEvent(new StorageEvent("storage", { key: "last_cv_id", newValue: String(id) }));
+    setError(msg);
+    setState("error");
 
-      setCvId(id);
-      setServerFileName(name);
-      setState("success");
+    toast({
+      title: "Upload failed",
+      description: msg,
+      variant: "destructive",
+    });
+  }
+};
 
-      toast({ title: "Upload Successful!", description: "Your CV has been uploaded successfully." });
-    } catch (e: any) {
-      const status = e?.response?.status;
-      if (status === 401 || status === 403) {
-        setState("unauth");
-        setError("Authentication required. Please log in.");
-        return;
-      }
-      const msg =
-        e?.response?.data?.error ||
-        e?.response?.data?.detail ||
-        e?.message ||
-        "Upload failed.";
-      setError(msg);
-      setState("error");
-      toast({ title: "Upload failed", description: msg, variant: "destructive" });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-hero py-8">
