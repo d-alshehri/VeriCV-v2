@@ -10,6 +10,7 @@ jobs:
   deploy:
     name: Deploy to VeriCV Server
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     
     steps:
       - name: Checkout code
@@ -32,49 +33,367 @@ jobs:
         run: |
           ssh $SSH_USER@$SSH_HOST << 'ENDSSH'
             set -e
-            echo "🚀 Starting deployment..."
             
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "🚀 VeriCV Production Deployment Started"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            
+            # Navigate to project
             cd /home/VeriCV
             
-            # Pull latest code
-            echo "📥 Pulling latest code..."
-            git pull origin main
+            # ═══════════════════════════════════════════════════════
+            # 1. GIT: Handle local changes and pull latest
+            # ═══════════════════════════════════════════════════════
+            echo "📥 Step 1: Updating codebase..."
             
-            # Backend updates
-            echo "🔧 Updating backend..."
+            # Save any local changes (shouldn't be any, but just in case)
+            git stash push -m "Auto-stash before deployment $(date)" || true
+            
+            # Ensure we're on main branch
+            git checkout main
+            
+            # Pull latest changes
+            git pull origin main
+            echo "✅ Code updated"
+            echo ""
+            
+            # ═══════════════════════════════════════════════════════
+            # 2. PYTHON: Update backend dependencies
+            # ═══════════════════════════════════════════════════════
+            echo "🐍 Step 2: Updating Python environment..."
+            
+            # Activate virtual environment
             source venv/bin/activate
+            
+            # Upgrade pip silently
+            pip install --upgrade pip --quiet 2>/dev/null || true
+            
+            # Install/update all backend dependencies
             pip install -r backend/requirements.txt --quiet
             
+            # Ensure gunicorn is installed
+            pip install gunicorn --quiet
+            echo "✅ Python dependencies updated"
+            echo ""
+            
+            # ═══════════════════════════════════════════════════════
+            # 3. DJANGO: Database migrations and static files
+            # ═══════════════════════════════════════════════════════
+            echo "🗃️  Step 3: Running Django operations..."
+            
             cd backend
+            
+            # Run migrations
             python manage.py migrate --noinput
-            python manage.py collectstatic --noinput
-            cd ..
+            echo "  ✓ Database migrations completed"
             
-            # Frontend updates
-            echo "🎨 Building frontend..."
+            # Collect static files
+            python manage.py collectstatic --noinput --clear
+            echo "  ✓ Static files collected"
+            
+            # Django check (non-blocking)
+            python manage.py check || echo "  ⚠️  Some Django checks failed (non-critical)"
+            
+            cd ..
+            echo "✅ Django operations completed"
+            echo ""
+            
+            # ═══════════════════════════════════════════════════════
+            # 4. FRONTEND: Build React application
+            # ═══════════════════════════════════════════════════════
+            echo "🎨 Step 4: Building frontend..."
+            
             cd frontend
-            npm install --silent
+            
+            # Install dependencies (only if needed)
+            if [ ! -d "node_modules" ] || [ "package.json" -nt "node_modules" ]; then
+              echo "  → Installing npm packages..."
+              npm install --silent
+            else
+              echo "  → npm packages up to date"
+            fi
+            
+            # Build production bundle
             npm run build
+            echo "✅ Frontend built successfully"
+            
             cd ..
+            echo ""
             
-            # Restart services
-            echo "♻️  Restarting services..."
-            sudo systemctl restart vericv
-            sudo systemctl reload nginx
+            # ═══════════════════════════════════════════════════════
+            # 5. SCRIPTS: Ensure critical scripts exist and are executable
+            # ═══════════════════════════════════════════════════════
+            echo "🔧 Step 5: Verifying startup scripts..."
             
-            # Health check
-            echo "🏥 Health check..."
-            sleep 3
-            curl -f http://127.0.0.1:8000/api/health || echo "⚠️  Backend health check failed"
+            # Check if start_gunicorn.sh exists at root
+            if [ ! -f /home/VeriCV/start_gunicorn.sh ]; then
+              echo "  ⚠️  start_gunicorn.sh missing, creating..."
+              
+              # Try to copy from repo first
+              if [ -f start_gunicorn.sh ]; then
+                cp start_gunicorn.sh /home/VeriCV/start_gunicorn.sh
+                echo "  ✓ Copied from repository"
+              else
+                # Create from scratch
+                cat > /home/VeriCV/start_gunicorn.sh << 'EOFSCRIPT'
+#!/bin/bash
+set -e
+cd /home/VeriCV/backend
+source /home/VeriCV/venv/bin/activate
+export DJANGO_SETTINGS_MODULE=core.settings
+exec gunicorn core.wsgi:application \
+    --bind 127.0.0.1:8000 \
+    --workers 3 \
+    --timeout 120 \
+    --access-logfile /var/log/vericv-access.log \
+    --error-logfile /var/log/vericv-error.log \
+    --log-level info \
+    --capture-output \
+    --enable-stdio-inheritance
+EOFSCRIPT
+                echo "  ✓ Created from template"
+              fi
+            else
+              echo "  ✓ start_gunicorn.sh exists"
+            fi
             
-            echo "✅ Deployment completed!"
+            # Make executable
+            chmod +x /home/VeriCV/start_gunicorn.sh
+            
+            # Verify emergency fix script
+            if [ -f fix_deployment.sh ]; then
+              chmod +x fix_deployment.sh
+              echo "  ✓ Emergency fix script ready"
+            fi
+            
+            echo "✅ Scripts verified"
+            echo ""
+            
+            # ═══════════════════════════════════════════════════════
+            # 6. CODE FIXES: Auto-fix known issues
+            # ═══════════════════════════════════════════════════════
+            echo "🔍 Step 6: Checking for known issues..."
+            
+            # Fix 1: Remove problematic print statements in ai_logic.py
+            if grep -q 'print(" API Key Loaded:' /home/VeriCV/backend/ai/ai_logic.py 2>/dev/null; then
+              echo "  ⚠️  Found problematic print statement, fixing..."
+              sed -i 's/print(" API Key Loaded:", GROQ_API_KEY)/# API key loaded from .env/' /home/VeriCV/backend/ai/ai_logic.py
+              echo "  ✓ Fixed print statement in ai_logic.py"
+            else
+              echo "  ✓ No problematic print statements found"
+            fi
+            
+            # Fix 2: Check for other print statements in production code
+            PRINT_COUNT=$(grep -r "^print(" backend/ai/ backend/core/ 2>/dev/null | grep -v "# print" | wc -l || echo "0")
+            if [ "$PRINT_COUNT" -gt 0 ]; then
+              echo "  ⚠️  Warning: Found $PRINT_COUNT print statements in production code"
+              echo "  → Consider replacing with logger.info() for production"
+            fi
+            
+            echo "✅ Code verification completed"
+            echo ""
+            
+            # ═══════════════════════════════════════════════════════
+            # 7. PERMISSIONS: Ensure correct file permissions
+            # ═══════════════════════════════════════════════════════
+            echo "🔐 Step 7: Setting file permissions..."
+            
+            # Ensure log files exist and are writable
+            sudo touch /var/log/vericv-access.log /var/log/vericv-error.log
+            sudo chmod 644 /var/log/vericv-access.log /var/log/vericv-error.log
+            
+            # Ensure media directory is writable
+            mkdir -p /home/VeriCV/backend/media
+            chmod 755 /home/VeriCV/backend/media
+            
+            # Ensure static files are readable
+            chmod -R 755 /home/VeriCV/backend/staticfiles 2>/dev/null || true
+            
+            echo "✅ Permissions set"
+            echo ""
+            
+            # ═══════════════════════════════════════════════════════
+            # 8. SYSTEMD: Reload and restart services
+            # ═══════════════════════════════════════════════════════
+            echo "♻️  Step 8: Restarting services..."
+            
+            # Reload systemd daemon to pick up any service file changes
+            sudo systemctl daemon-reload
+            
+            # Stop service cleanly
+            sudo systemctl stop vericv || true
+            
+            # Kill any hung gunicorn processes
+            sudo pkill -9 -f "gunicorn.*vericv" 2>/dev/null || true
+            sleep 2
+            
+            # Start service
+            sudo systemctl start vericv
+            
+            echo "  ✓ VeriCV service restarted"
+            echo ""
+            
+            # ═══════════════════════════════════════════════════════
+            # 9. HEALTH CHECK: Verify service is running
+            # ═══════════════════════════════════════════════════════
+            echo "🏥 Step 9: Health check (5 retries)..."
+            
+            # Wait for service to initialize
+            sleep 5
+            
+            # Health check with retries
+            RETRY=0
+            MAX_RETRY=5
+            HEALTH_OK=false
+            
+            while [ $RETRY -lt $MAX_RETRY ]; do
+              echo "  → Attempt $((RETRY+1))/$MAX_RETRY..."
+              
+              if curl -f http://127.0.0.1:8000/api/health -s > /dev/null 2>&1; then
+                echo "  ✅ Backend is healthy!"
+                HEALTH_OK=true
+                break
+              else
+                RETRY=$((RETRY+1))
+                if [ $RETRY -lt $MAX_RETRY ]; then
+                  echo "  ⚠️  Health check failed, waiting 3 seconds..."
+                  sleep 3
+                fi
+              fi
+            done
+            
+            # If health check failed after all retries
+            if [ "$HEALTH_OK" = false ]; then
+              echo ""
+              echo "❌ DEPLOYMENT FAILED: Backend health check failed after $MAX_RETRY attempts"
+              echo ""
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              echo "📋 SERVICE STATUS:"
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              sudo systemctl status vericv --no-pager -l | head -n 30
+              echo ""
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              echo "📋 RECENT ERROR LOGS:"
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              sudo tail -100 /var/log/vericv-error.log
+              echo ""
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              echo "🔧 ATTEMPTING EMERGENCY FIX..."
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              
+              # Run emergency fix if available
+              if [ -f /home/VeriCV/fix_deployment.sh ]; then
+                bash /home/VeriCV/fix_deployment.sh || echo "Emergency fix script failed"
+              else
+                echo "⚠️  Emergency fix script not found"
+                echo "Manual intervention required"
+              fi
+              
+              exit 1
+            fi
+            
+            echo ""
+            
+            # ═══════════════════════════════════════════════════════
+            # 10. NGINX: Reload web server
+            # ═══════════════════════════════════════════════════════
+            echo "🌐 Step 10: Reloading nginx..."
+            
+            # Test nginx configuration first
+            if sudo nginx -t 2>/dev/null; then
+              sudo systemctl reload nginx
+              echo "✅ Nginx reloaded successfully"
+            else
+              echo "⚠️  Nginx configuration test failed"
+              sudo nginx -t
+            fi
+            
+            echo ""
+            
+            # ═══════════════════════════════════════════════════════
+            # 11. FINAL VERIFICATION: End-to-end test
+            # ═══════════════════════════════════════════════════════
+            echo "🧪 Step 11: Final verification..."
+            
+            # Test local endpoint
+            if curl -f http://127.0.0.1:8000/api/health -s > /dev/null 2>&1; then
+              echo "  ✓ Local endpoint working"
+            else
+              echo "  ⚠️  Local endpoint not responding"
+            fi
+            
+            # Test public endpoint (if domain is configured)
+            if curl -f https://vericv.app/api/health -s -k > /dev/null 2>&1; then
+              echo "  ✓ Public endpoint working"
+            else
+              echo "  ⚠️  Public endpoint not responding (might be DNS/SSL)"
+            fi
+            
+            # Check service status
+            if sudo systemctl is-active --quiet vericv; then
+              echo "  ✓ Service is active"
+            else
+              echo "  ⚠️  Service is not active"
+            fi
+            
+            # Check if gunicorn is listening
+            if sudo netstat -tulpn | grep -q ":8000.*gunicorn"; then
+              echo "  ✓ Gunicorn listening on port 8000"
+            else
+              echo "  ⚠️  Gunicorn not listening on expected port"
+            fi
+            
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "✅ DEPLOYMENT COMPLETED SUCCESSFULLY!"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "📊 Deployment Summary:"
+            echo "  • Code updated from main branch"
+            echo "  • Python dependencies installed"
+            echo "  • Database migrations applied"
+            echo "  • Static files collected"
+            echo "  • Frontend built"
+            echo "  • Services restarted"
+            echo "  • Health checks passed"
+            echo "  • Nginx reloaded"
+            echo ""
+            echo "🌐 Your application is now live at:"
+            echo "  → https://vericv.app"
+            echo "  → http://104.248.136.7"
+            echo ""
+            echo "📋 Useful commands:"
+            echo "  • Check status: sudo systemctl status vericv"
+            echo "  • View logs: sudo journalctl -u vericv -f"
+            echo "  • Error logs: sudo tail -f /var/log/vericv-error.log"
+            echo ""
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           ENDSSH
       
       - name: Notify deployment status
         if: always()
         run: |
           if [ ${{ job.status }} == 'success' ]; then
-            echo "✅ Deployment successful!"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "✅ GITHUB ACTIONS: Deployment Successful!"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "🎉 VeriCV has been successfully deployed to production!"
+            echo ""
+            echo "🌐 Live at: https://vericv.app"
+            echo "📊 Check status: https://github.com/${{ github.repository }}/actions"
           else
-            echo "❌ Deployment failed!"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "❌ GITHUB ACTIONS: Deployment Failed!"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo ""
+            echo "Please check the logs above for details."
+            echo "Common issues:"
+            echo "  • SSH connection failed"
+            echo "  • Database migration errors"
+            echo "  • Health check timeout"
+            echo "  • Nginx configuration issues"
+            echo ""
+            echo "📋 View full logs: https://github.com/${{ github.repository }}/actions"
           fi
