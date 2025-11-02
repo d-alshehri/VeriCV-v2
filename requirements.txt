@@ -1,4 +1,4 @@
-# ---- Backend (Python / FastAPI) ----
+# Backend (Python / FastAPI) 
 fastapi==0.103.0
 uvicorn[standard]==0.23.2
 sqlalchemy==2.0.26
@@ -17,6 +17,28 @@ pytest-asyncio==0.22.0
 dj-database-url>=2.1
 
 
-# ---- Frontend (Node / Vite / React) ----
-# Listed for documentation only — install via npm/yarn:
-# npm install react react-dom vite typescript tailwindcss postcss autoprefixer lucide-react shadcn/ui
+# Frontend dependencies
+axios
+clsx
+lucide-react
+react
+react-dom
+react-router-dom
+recharts
+tailwind-merge
+class-variance-authority
+framer-motion
+shadcn-ui
+
+# Development dependencies
+@types/react
+@types/react-dom
+@vitejs/plugin-react-swc
+autoprefixer
+eslint
+eslint-plugin-react-hooks
+eslint-plugin-react-refresh
+postcss
+tailwindcss
+vite
+typescript
