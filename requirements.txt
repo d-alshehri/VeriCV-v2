@@ -15,6 +15,7 @@ aiohttp==3.9.0
 pytest==7.4.2
 pytest-asyncio==0.22.0
 dj-database-url>=2.1
+dj-database-url==2.2.0
 
 
 # Frontend dependencies
