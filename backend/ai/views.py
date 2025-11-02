@@ -1,55 +1,18 @@
-# import json
-# from django.http import JsonResponse
-# from django.views.decorators.csrf import csrf_exempt
-# from .ai_logic import extract_text_from_pdf, generate_questions_from_cv, generate_feedback_from_ai
-
-
-# @csrf_exempt
-# def generate_questions_view(request):
-#     """API endpoint to upload CV and generate interview questions."""
-#     if request.method == "POST" and request.FILES.get("cv"):
-#         pdf_file = request.FILES["cv"]
-#         cv_text = extract_text_from_pdf(pdf_file)
-#         questions = generate_questions_from_cv(cv_text)
-#         return JsonResponse({"questions": questions}, status=200)
-#     return JsonResponse({"error": "Please upload a valid PDF file."}, status=400)
-
-
-# @csrf_exempt
-# def submit_answers_view(request):
-#     """API endpoint to submit answers and get AI feedback."""
-#     if request.method == "POST":
-#         try:
-#             data = json.loads(request.body)
-#             answers = data.get("answers", [])
-#             percent = data.get("percent", 0)
-
-#             wrong_answers = [a for a in answers if a["chosen"] != a["correct"]]
-#             feedback = generate_feedback_from_ai(wrong_answers, percent)
-
-#             return JsonResponse({"score": percent, "feedback": feedback}, status=200)
-#         except Exception as e:
-#             return JsonResponse({"error": str(e)}, status=500)
-
-#     return JsonResponse({"error": "Invalid request method."}, status=400)
-
-# backend/ai/views.py
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
-from django.utils.datastructures import MultiValueDictKeyError
-from django.core.files.uploadedfile import UploadedFile
 from cv.models import CV  # adjust if your model name/app differs
-from .ai_logic import extract_text_from_pdf, generate_questions_from_cv  # keep your existing functions
+from .ai_logic import extract_text_from_pdf, generate_questions_from_cv
 import json
+
 
 @csrf_exempt
 def generate_questions_view(request):
     """
     POST:
-      JSON:  { "cv_id": <int> }               -> uses a server-stored CV file
+      JSON:  { "cv_id": <int> }  -> uses a server-stored CV file
       OR multipart/form-data with file under one of:
-              'cv' | 'file' | 'pdf' | 'cv_file' | 'resume' | 'document'
-    RESP: { "questions": [ {question, options?, answer?}, ... ] }
+          'cv' | 'file' | 'pdf' | 'cv_file' | 'resume' | 'document'
+    RESP: { "questions": [ {question, options?, skill?, category?}, ... ] }
     """
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request method."}, status=400)
@@ -78,118 +41,121 @@ def generate_questions_view(request):
             if key in request.FILES:
                 cv_file = request.FILES[key]
                 break
-
         if not cv_file:
-            return JsonResponse({"error": "Please upload a valid PDF file or provide cv_id."}, status=400)
+            return JsonResponse(
+                {"error": "Please upload a valid PDF file or provide cv_id."},
+                status=400,
+            )
 
     # Extract text & generate questions
     try:
         text = extract_text_from_pdf(cv_file)
         questions = generate_questions_from_cv(text)
-
-        # Normalize to list[dict]
         questions = _normalize_questions(questions)
 
+        # ✅ Add inferred skill + category if missing
+        for q in questions:
+            qtext = q.get("question", "")
+            if "skill" not in q or not q.get("skill"):
+                skill = _infer_skill_from_question(qtext)
+                q["skill"] = skill
+                q["category"] = (
+                    "soft"
+                    if skill in ["Communication", "Project Management"]
+                    else "technical"
+                )
+
         return JsonResponse({"questions": questions}, status=200, safe=False)
+
     except Exception as e:
-        return JsonResponse({"error": f"Failed to generate questions: {e}"}, status=500)
+        return JsonResponse(
+            {"error": f"Failed to generate questions: {e}"}, status=500
+        )
 
 
 @csrf_exempt
 def submit_answers_view(request):
     """
     POST /api/ai/submit/
-    Body can be:
-      { "answers": [ {"question": "...", "answer": "A"}, ... ] }
-      or { "answers": { "<q1>": "A", "<q2>": "B", ... } }
-
-    Responds with a simple score + normalized results so the Results page can render.
-    (You can later replace this with real grading against correct keys.)
+    Body: { "answers": [ { "question": "...", "answer": 1, "correct_index": 1, "skill": "Python", "category": "technical" } ] }
+    Returns: overall score + per-skill results.
     """
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request method."}, status=400)
 
     try:
-        body = request.body.decode("utf-8") or "{}"
-        data = json.loads(body)
-        answers = data.get("answers")
+        data = json.loads(request.body.decode("utf-8") or "{}")
+        answers = data.get("answers", [])
 
-        # Normalize answers to a list of {question, answer}
-        if isinstance(answers, dict):
-            answers_list = [{"question": q, "answer": a} for q, a in answers.items()]
-        elif isinstance(answers, list):
-            # ensure shape
-            answers_list = []
-            for item in answers:
-                if isinstance(item, dict) and "question" in item and "answer" in item:
-                    answers_list.append({"question": item["question"], "answer": item["answer"]})
-        else:
-            answers_list = []
+        correct = 0
+        total = 0
+        per_skill = {}
 
-        # Dummy scoring: give 75 if we received any answers, else 0
-        score = 75 if answers_list else 0
+        for a in answers:
+            skill = a.get("skill", "General")
+            cat = a.get("category", "technical")
 
-        # Turn answers into "results" entries for UI (you can enrich later)
-        results = [
+            if skill not in per_skill:
+                per_skill[skill] = {"sum": 0, "count": 0, "category": cat}
+
+            user_answer = a.get("answer")
+            correct_index = a.get("correct_index")
+
+            if isinstance(user_answer, int) and isinstance(correct_index, int):
+                total += 1
+                if user_answer == correct_index:
+                    correct += 1
+                    per_skill[skill]["sum"] += 100
+                else:
+                    per_skill[skill]["sum"] += 0
+                per_skill[skill]["count"] += 1
+            else:
+                # For open-ended or text answers, give neutral score
+                per_skill[skill]["sum"] += 70
+                per_skill[skill]["count"] += 1
+
+        overall = round((correct / total) * 100) if total else 70
+        skills = [
             {
-                "skill": _infer_skill_from_question(a["question"]),
-                "score": 80,  # placeholder per item; replace with real grading later
-                "category": "technical",
-                "status": "good",
+                "skill": s,
+                "score": round(v["sum"] / max(v["count"], 1)),
+                "category": v["category"],
             }
-            for a in answers_list
+            for s, v in per_skill.items()
         ]
 
-        return JsonResponse(
-            {
-                "score": score,
-                "results": results,
-            },
-            status=200,
-        )
+        return JsonResponse({"overall": overall, "skills": skills}, status=200)
+
     except Exception as e:
-        return JsonResponse({"error": f"Failed to submit answers: {e}"}, status=500)
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 # -----------------
 # Helpers
 # -----------------
 def _normalize_questions(raw):
-    """
-    Accepts:
-      - dict with 'questions'
-      - list at root
-      - JSON string containing list or {questions: [...]}
-    Returns: list[dict]
-    """
+    """Accepts dict/list/JSON-string and returns list[dict]."""
     if raw is None:
         return []
-
     if isinstance(raw, list):
         return raw
-
     if isinstance(raw, dict):
-        q = raw.get("questions")
-        if isinstance(q, list):
-            return q
-        # sometimes model returns {"data":[...]}
-        d = raw.get("data")
-        if isinstance(d, list):
-            return d
+        if isinstance(raw.get("questions"), list):
+            return raw["questions"]
+        if isinstance(raw.get("data"), list):
+            return raw["data"]
         return []
-
     if isinstance(raw, str):
         try:
             parsed = json.loads(raw)
             return _normalize_questions(parsed)
         except Exception:
             return [{"question": raw}]
-
     return []
 
 
 def _infer_skill_from_question(q: str) -> str:
-    """Very rough mapping to make Results UI look nice. Adjust as needed."""
+    """Basic keyword mapping to keep Results UI consistent."""
     s = (q or "").lower()
     if "react" in s:
         return "React"
@@ -197,8 +163,12 @@ def _infer_skill_from_question(q: str) -> str:
         return "Python"
     if "sql" in s or "database" in s:
         return "SQL"
-    if "project management" in s:
+    if "project management" in s or "manager" in s:
         return "Project Management"
-    if "communication" in s:
+    if "communication" in s or "team" in s:
         return "Communication"
+    if "marketing" in s:
+        return "Marketing"
+    if "budget" in s or "finance" in s:
+        return "Budget Management"
     return "General"

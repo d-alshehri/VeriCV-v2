@@ -14,22 +14,29 @@ import {
   Share,
 } from "lucide-react";
 
-/**
- * ResultsPage expects to receive (via router state) something like:
- * {
- *   overallScore: number,
- *   skills: Array<{ skill: string; score: number; category?: 'technical'|'soft' }>,
- *   recommendations?: Array<{ skill: string; suggestion: string; resources: string[] }>
- * }
- *
- * If not provided, it builds a best-effort summary from `answers`/`questions` (also in state)
- * or shows a friendly empty view.
- */
+console.log("ResultsPage loaded from:", import.meta.url);
+
 export default function ResultsPage() {
   const location = useLocation() as any;
   const state = location?.state || {};
+  console.log("Router state on load:", state);
 
-  // ----- Helpers to colorize -----
+  // ✅ Fallback: load from localStorage if state is empty
+  if (!state?.overallScore && !state?.overall && !state?.skills) {
+    const storedScore = localStorage.getItem("ai_score");
+    const storedResults = localStorage.getItem("ai_results");
+    if (storedScore && storedResults) {
+      try {
+        state.overallScore = Number(storedScore);
+        state.skills = JSON.parse(storedResults);
+        console.log("✅ Loaded results from localStorage");
+      } catch (err) {
+        console.warn("⚠️ Failed to parse stored results:", err);
+      }
+    }
+  }
+
+  // ----- Helpers -----
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-success";
     if (score >= 70) return "text-primary";
@@ -41,22 +48,44 @@ export default function ResultsPage() {
     return "bg-destructive";
   };
 
-  // ----- Fallback summarizer if only Q&A provided -----
-  // If your backend returns detailed scoring, prefer passing it via router state.
+  // ----- Summarizer -----
   const summarized = useMemo(() => {
-    // If full payload provided, just use it
-    if (typeof state?.overallScore === "number" && Array.isArray(state?.skills)) {
+    // ✅ Prefer real data from QuizPage/backend
+    if (
+      state &&
+      (typeof state.overallScore === "number" || typeof state.overall === "number") &&
+      Array.isArray(state.skills) &&
+      state.skills.length > 0
+    ) {
+      console.log("✅ Using real data from QuizPage/backend");
+      console.log("Skills received:", state.skills);
       return {
-        overallScore: state.overallScore,
-        skills: state.skills as Array<{ skill: string; score: number; category?: string }>,
+        overallScore: state.overall ?? state.overallScore,
+        skills: state.skills,
         recommendations: state.recommendations || [],
       };
     }
 
-    // Otherwise, try to guess a score from questions with `correctAnswer` and numeric answers
+    // 🧠 Fallback: try localStorage
+    const storedScore = localStorage.getItem("ai_score");
+    const storedResults = localStorage.getItem("ai_results");
+    if (storedScore && storedResults) {
+      try {
+        console.log("🧠 Using fallback data from localStorage");
+        return {
+          overallScore: Number(storedScore),
+          skills: JSON.parse(storedResults),
+          recommendations: [],
+        };
+      } catch {
+        console.warn("⚠️ Failed to parse stored results");
+      }
+    }
+
+    // ⚙️ Last resort: build from questions (dummy)
+    console.log("⚙️ Using dummy summary fallback");
     const qs: any[] = Array.isArray(state?.questions) ? state.questions : [];
     const ans: Record<number, number | string> = state?.answers || {};
-
     let correct = 0;
     let total = 0;
     const skillScores: Record<string, { sum: number; count: number; category: string }> = {};
@@ -66,14 +95,11 @@ export default function ResultsPage() {
       const skill = q.skill || q.topic || "General";
       const category = q.category || (skill === "Communication" ? "soft" : "technical");
 
-      // If there is a correctAnswer index and the answer is numeric, grade it
       if (hasOptions && typeof q.correctAnswer === "number") {
         total += 1;
         if (ans[i] === q.correctAnswer) correct += 1;
       }
 
-      // For skill aggregation: pretend correct=1/0 mapped to 100/0,
-      // else give neutral 70 to short answers (so they show up)
       const thisScore =
         hasOptions && typeof q.correctAnswer === "number"
           ? ans[i] === q.correctAnswer
@@ -93,36 +119,17 @@ export default function ResultsPage() {
     }));
 
     const overallScore =
-      typeof state?.overallScore === "number"
-        ? state.overallScore
-        : total > 0
+      total > 0
         ? Math.round((correct / total) * 100)
-        : Math.round(
-            skills.reduce((acc, s) => acc + s.score, 0) / Math.max(1, skills.length)
-          );
+        : Math.round(skills.reduce((acc, s) => acc + s.score, 0) / Math.max(1, skills.length));
 
-    // Very lightweight recommendations based on <70
-    const recommendations = skills
-      .filter((s) => s.score < 70)
-      .slice(0, 3)
-      .map((s) => ({
-        skill: s.skill,
-        suggestion:
-          s.skill === "Git"
-            ? "Practice advanced Git workflows and branching strategies."
-            : s.skill === "SQL"
-            ? "Focus on joins, aggregations, and query optimization."
-            : "Review fundamentals and practice with small projects.",
-        resources: ["FreeCodeCamp", "MDN / Docs", "HackerRank / LeetCode"],
-      }));
-
-    return { overallScore, skills, recommendations };
-  }, [state]);
+    return { overallScore, skills, recommendations: [] };
+  }, [state]); // ✅ depend on state
 
   const strengths = (summarized.skills || []).filter((s) => s.score >= 80);
   const improvements = (summarized.skills || []).filter((s) => s.score < 70);
 
-  // ----- Export/Share actions -----
+  // ----- Actions -----
   const downloadReport = () => {
     const blob = new Blob([JSON.stringify(summarized, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -145,7 +152,7 @@ export default function ResultsPage() {
           </p>
         </div>
 
-        {/* If nothing to show, display an empty state */}
+        {/* Empty State */}
         {!summarized?.skills?.length ? (
           <Card className="shadow-large">
             <CardContent className="p-8 text-center">
@@ -175,15 +182,26 @@ export default function ResultsPage() {
                     <p className="text-muted-foreground">Overall Score</p>
                   </div>
                   <div className="text-left">
-                    <h3 className="text-xl font-semibold mb-2">Great Performance!</h3>
+                    <h3 className="text-xl font-semibold mb-2">
+                      {summarized.overallScore >= 80
+                        ? "Excellent Performance!"
+                        : summarized.overallScore >= 60
+                        ? "Good Job!"
+                        : "Needs Improvement"}
+                    </h3>
                     <p className="text-muted-foreground max-w-md">
-                      You&apos;ve demonstrated strong capabilities. Focus on the areas below for even better results.
+                      {summarized.overallScore >= 80
+                        ? "You’ve demonstrated strong capabilities. Keep refining your skills."
+                        : summarized.overallScore >= 60
+                        ? "You did well! Focus on weaker areas to improve."
+                        : "Don’t worry—review the recommendations below and try again."}
                     </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
+            {/* Skill Breakdown + Strengths/Improvements */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               {/* Skill Breakdown */}
               <Card className="shadow-medium">
@@ -253,7 +271,7 @@ export default function ResultsPage() {
                   </CardContent>
                 </Card>
 
-                {/* Areas for Improvement */}
+                {/* Focus Areas */}
                 <Card className="shadow-medium">
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2 text-primary">
@@ -312,22 +330,22 @@ export default function ResultsPage() {
             )}
 
             {/* Actions */}
-<div className="flex flex-col sm:flex-row gap-4 justify-center">
-  <Button variant="hero" size="lg" onClick={downloadReport}>
-    <Download className="w-4 h-4 mr-2" />
-    Download Report
-  </Button>
-  <Button
-    variant="outline"
-    size="lg"
-    onClick={() => {
-      navigator.clipboard.writeText(window.location.href);
-    }}
-  >
-    <Share className="w-4 h-4 mr-2" />
-    Share Results
-  </Button>
-</div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button variant="hero" size="lg" onClick={downloadReport}>
+                <Download className="w-4 h-4 mr-2" />
+                Download Report
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                }}
+              >
+                <Share className="w-4 h-4 mr-2" />
+                Share Results
+              </Button>
+            </div>
           </>
         )}
       </div>

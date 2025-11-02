@@ -13,7 +13,7 @@ type Question = {
   options?: string[];
   correctAnswer?: number;   // optional; backend may not return it
   skill?: string;
-  topic?: string;  
+  topic?: string;
   category?: "technical" | "soft" | string; // ✅ include category
 };
 
@@ -31,20 +31,61 @@ export default function QuizPage() {
 
   const cvId = useMemo(() => localStorage.getItem("last_cv_id"), []);
 
+  function inferSkillFromText(qText: string): string {
+    const s = (qText || "").toLowerCase();
+    // Programming / Frameworks
+    if (s.includes("python") || s.includes("django") || s.includes("flask")) return "Python";
+    if (s.includes("java") || s.includes("jvm")) return "Java";
+    if (s.includes("javascript") || s.includes("typescript")) return "JavaScript/TypeScript";
+    if (s.includes("react") || s.includes("component") || s.includes("hook")) return "React";
+    if (s.includes("node") || s.includes("express")) return "Node.js";
+    // Data / Databases
+    if (s.includes("sql") || s.includes("query") || s.includes("join") || s.includes("database")) return "SQL";
+    if (s.includes("mongodb") || s.includes("nosql")) return "NoSQL";
+    // DevOps / Cloud
+    if (s.includes("docker") || s.includes("container")) return "Docker";
+    if (s.includes("kubernetes") || s.includes("k8s")) return "Kubernetes";
+    if (s.includes("aws") || s.includes("s3") || s.includes("lambda")) return "AWS";
+    if (s.includes("ci/cd") || s.includes("pipeline") || s.includes("github actions")) return "CI/CD";
+    // Web / API
+    if (s.includes("http") || s.includes("rest") || s.includes("endpoint") || s.includes("status code")) return "API Design";
+    if (s.includes("html") || s.includes("css")) return "Web Fundamentals";
+    // Soft / PM
+    if (s.includes("communication") || s.includes("teamwork") || s.includes("leadership")) return "Communication";
+    if (s.includes("project") && s.includes("management")) return "Project Management";
+    if (s.includes("agile") || s.includes("scrum")) return "Agile/Scrum";
+    return "General";
+  }
+  function inferCategoryFromSkill(skill: string): "technical" | "soft" {
+    const soft = ["Communication", "Project Management", "Agile/Scrum"];
+    return soft.includes(skill) ? "soft" : "technical";
+  }
   // helper: normalize API shapes
   function normalize(raw: any): Question[] {
     if (!raw) return [];
     const arr = Array.isArray(raw) ? raw : raw.questions || [];
-    return arr.map((q: any, i: number) => ({
-      id: q.id ?? i + 1,
-      question: q.question ?? q.prompt ?? q.text ?? String(q),
-      options: Array.isArray(q.options) ? q.options : undefined,
-      correctAnswer: typeof q.correctAnswer === "number" ? q.correctAnswer : undefined,
-      skill: q.skill ?? q.topic ?? undefined,
-      category: q.category ?? undefined, // ✅ safe
-    }));
+    return arr.map((q: any, i: number) => {
+      const text = q.question ?? q.prompt ?? q.text ?? String(q);
+      // Prefer backend-provided fields; otherwise infer from text
+      const skill = q.skill ?? q.topic ?? inferSkillFromText(text);
+      const category = q.category ?? inferCategoryFromSkill(skill);
+      // Accept correctAnswer or correct_index from backend
+      const correctAnswer =
+        typeof q.correctAnswer === "number"
+          ? q.correctAnswer
+          : typeof (q as any).correct_index === "number"
+            ? (q as any).correct_index
+            : undefined;
+      return {
+        id: q.id ?? i + 1,
+        question: text,
+        options: Array.isArray(q.options) ? q.options : undefined,
+        correctAnswer,
+        skill,
+        category,
+      };
+    });
   }
-
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -72,51 +113,49 @@ export default function QuizPage() {
       mounted = false;
     };
   }, [cvId]);
-
   useEffect(() => {
     if (status !== "ready") return;
     if (timeLeft <= 0) return;
     const t = setTimeout(() => setTimeLeft((s) => s - 1), 1000);
     return () => clearTimeout(t);
   }, [status, timeLeft]);
-
   const progress = questions.length ? ((current + 1) / questions.length) * 100 : 0;
-
   const handleAnswerSelect = (val: number | string) => {
     setAnswers((prev) => ({ ...prev, [current]: val }));
   };
-
   const handleNext = () => {
     if (current < questions.length - 1) setCurrent((i) => i + 1);
   };
-
   const handlePrev = () => {
     if (current > 0) setCurrent((i) => i - 1);
   };
-
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
     const r = s % 60;
     return `${m}:${String(r).padStart(2, "0")}`;
   };
-
   const submit = async () => {
     setStatus("submitting");
     try {
-      // Build payload for backend
+      // Build payload for backend (keep var names)
       const payload = questions.map((q, idx) => ({
         question: q.question,
         answer: answers[idx],
-        correctAnswer: typeof q.correctAnswer === "number" ? q.correctAnswer : undefined,
-        options: q.options,
+        correct_index:
+          typeof q.correctAnswer === "number"
+            ? q.correctAnswer
+            : typeof (q as any).correct_index === "number"
+              ? (q as any).correct_index
+              : undefined,
         skill: q.skill,
-        category: q.category, // ✅ type now knows this
+        category: q.category,
       }));
-
-      await submitAnswers(payload);
-
-      // Compute a quick summary and navigate to /results
-      const total = questions.filter(q => Array.isArray(q.options) && typeof q.correctAnswer === "number").length;
+      // Use backend scoring if available
+      const data = await submitAnswers(payload);
+      // Local fallback calculation (kept intact)
+      const total = questions.filter(
+        (q) => Array.isArray(q.options) && typeof q.correctAnswer === "number"
+      ).length;
       const correct = questions.reduce((acc, q, i) => {
         if (Array.isArray(q.options) && typeof q.correctAnswer === "number" && answers[i] === q.correctAnswer) {
           return acc + 1;
@@ -124,11 +163,10 @@ export default function QuizPage() {
         return acc;
       }, 0);
       const overallScore = total > 0 ? Math.round((correct / total) * 100) : 75;
-
       const perSkill: Record<string, { sum: number; count: number; category: string }> = {};
       questions.forEach((q, i) => {
         const skill = q.skill || q.topic || "General";
-        const category = q.category || (skill === "Communication" ? "soft" : "technical"); // ✅ fixed 'const'
+        const category = q.category || (skill === "Communication" ? "soft" : "technical");
         const hasOpt = Array.isArray(q.options) && typeof q.correctAnswer === "number";
         const thisScore = hasOpt ? (answers[i] === q.correctAnswer ? 100 : 0) : 70;
         if (!perSkill[skill]) perSkill[skill] = { sum: 0, count: 0, category };
@@ -140,23 +178,25 @@ export default function QuizPage() {
         score: Math.round(agg.sum / Math.max(1, agg.count)),
         category: agg.category,
       }));
-
+      // Prefer backend data if present
+      const finalOverall = typeof data?.overall === "number" ? data.overall : overallScore;
+      const finalSkills = Array.isArray(data?.skills) ? data.skills : skills;
       nav("/results", {
         state: {
-          overallScore,
-          skills,
+          overallScore: finalOverall,
+          skills: finalSkills,
           answers,
           questions,
         },
       });
-
+      localStorage.setItem("ai_score", String(finalOverall));
+      localStorage.setItem("ai_results", JSON.stringify(finalSkills));
       setStatus("completed");
     } catch (e: any) {
       setError(e?.response?.data?.error || e?.message || "Failed to submit answers.");
       setStatus("error");
     }
   };
-
   const handleLocalPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -169,7 +209,6 @@ export default function QuizPage() {
     setError(null);
     setPdfFile(f);
   };
-
   const generateFromFile = async () => {
     if (!pdfFile) return;
     setStatus("generating");
@@ -188,9 +227,7 @@ export default function QuizPage() {
       setStatus("error");
     }
   };
-
   /* ---------- UI ---------- */
-
   if (status === "generating") {
     return (
       <div className="min-h-screen bg-gradient-hero py-8">
@@ -206,7 +243,6 @@ export default function QuizPage() {
       </div>
     );
   }
-
   if (status === "completed") {
     return (
       <div className="min-h-screen bg-gradient-hero py-8">
@@ -218,7 +254,24 @@ export default function QuizPage() {
               <p className="text-lg text-muted-foreground mb-8">
                 Great job! Your answers have been submitted.
               </p>
-              <Button variant="hero" size="lg" onClick={() => nav("/results")}>
+              <Button
+                variant="hero"
+                size="lg"
+                onClick={() =>
+                  nav("/results", {
+                    state: {
+                      overallScore: localStorage.getItem("ai_score")
+                        ? Number(localStorage.getItem("ai_score"))
+                        : undefined,
+                      skills: localStorage.getItem("ai_results")
+                        ? JSON.parse(localStorage.getItem("ai_results")!)
+                        : [],
+                      answers,
+                      questions,
+                    },
+                  })
+                }
+              >
                 View Results
               </Button>
             </CardContent>
@@ -227,7 +280,6 @@ export default function QuizPage() {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-gradient-hero py-8">
       <div className="container mx-auto px-4 max-w-3xl">
@@ -245,7 +297,6 @@ export default function QuizPage() {
             {questions.length ? <>Question {current + 1} of {questions.length}</> : <>Upload a PDF to begin</>}
           </p>
         </div>
-
         {/* Manual upload when no cvId/questions */}
         {!cvId && !questions.length && (
           <Card className="shadow-large mb-8">
@@ -265,7 +316,6 @@ export default function QuizPage() {
             </CardContent>
           </Card>
         )}
-
         {/* Question Card */}
         {questions.length > 0 && (
           <Card className="shadow-large mb-8">
@@ -289,17 +339,15 @@ export default function QuizPage() {
                       <button
                         key={idx}
                         onClick={() => handleAnswerSelect(idx)}
-                        className={`w-full p-4 text-left rounded-lg border-2 transition-all ${
-                          selected
+                        className={`w-full p-4 text-left rounded-lg border-2 transition-all ${selected
                             ? "border-primary bg-primary/5"
                             : "border-border hover:border-primary/50 hover:bg-muted/50"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center space-x-3">
                           <div
-                            className={`w-4 h-4 rounded-full border-2 ${
-                              selected ? "border-primary bg-primary" : "border-muted-foreground"
-                            }`}
+                            className={`w-4 h-4 rounded-full border-2 ${selected ? "border-primary bg-primary" : "border-muted-foreground"
+                              }`}
                           />
                           <span>{opt}</span>
                         </div>
@@ -321,7 +369,6 @@ export default function QuizPage() {
             </CardContent>
           </Card>
         )}
-
         {/* Nav */}
         {questions.length > 0 && (
           <div className="flex justify-between">
@@ -329,7 +376,6 @@ export default function QuizPage() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Previous
             </Button>
-
             {current === questions.length - 1 ? (
               <Button
                 variant="hero"
@@ -346,7 +392,6 @@ export default function QuizPage() {
             )}
           </div>
         )}
-
         {status === "error" && error && <div className="text-red-600 text-sm mt-4">{error}</div>}
       </div>
     </div>

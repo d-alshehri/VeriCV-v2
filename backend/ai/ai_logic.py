@@ -8,6 +8,7 @@ import pytesseract
 import tempfile
 import re
 import logging
+import time
 
 # Setup logging instead of print statements
 logger = logging.getLogger(__name__)
@@ -42,7 +43,6 @@ def extract_text_from_pdf(file):
         os.remove(temp_path)
 
 
-# Generate Questions
 def generate_questions_from_cv(cv_text):
     """Send resume text to Groq API and generate professional questions."""
     url = "https://api.groq.com/openai/v1/chat/completions"
@@ -50,46 +50,78 @@ def generate_questions_from_cv(cv_text):
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
     }
-
     prompt = f"""
-You are a professional HR and technical interviewer.
+You are an experienced HR and technical interviewer.
 
 Analyze the following resume content carefully:
 ---
 {cv_text}
 ---
-Identify all technical, behavioral, and soft skills mentioned.
-Then generate 15 multiple-choice interview questions (MCQs) that evaluate
-the candidate's ability to apply these skills in real job settings.
 
-Rules:
-- Include 5 easy, 5 intermediate, 5 advanced questions.
-- Each question must have 4 options, 1 correct answer.
-- Avoid referencing the resume directly.
-- Keep it professional and realistic.
-Return ONLY pure JSON:
+Extract the main *technical* and *soft* skills mentioned.
+
+Then generate exactly **10 multiple-choice questions (MCQs)** that test those skills.
+
+Each question **must** include:
+- "question": the question text
+- "options": a list of 4 possible answers
+- "correct_index": integer 0–3 (index of correct option)
+- "skill": the specific skill being tested
+- "category": "technical" or "soft" (based on skill type)
+
+Example output:
 [
   {{
-    "question": "Example question...",
-    "options": ["A", "B", "C", "D"],
-    "answer": "Correct answer"
+    "question": "Which command initializes a Git repository?",
+    "options": ["git init", "git start", "git new", "git repo"],
+    "correct_index": 0,
+    "skill": "Git",
+    "category": "technical"
+  }},
+  {{
+    "question": "Which behavior best shows active listening?",
+    "options": [
+      "Interrupting to respond quickly",
+      "Maintaining eye contact and summarizing what was said",
+      "Multitasking during the conversation",
+      "Talking more than listening"
+    ],
+    "correct_index": 1,
+    "skill": "Communication",
+    "category": "soft"
   }}
 ]
-Do NOT include markdown or extra text.
+Return ONLY this JSON, no markdown, no text.
 """
-
     data = {"model": "groq/compound", "messages": [{"role": "user", "content": prompt}]}
-
-    response = requests.post(url, headers=headers, json=data, timeout=45)
-
+    # Retry logic for rate limits
+    for attempt in range(3):
+        response = requests.post(url, headers=headers, json=data, timeout=45)
+        if response.status_code == 429:
+            logger.warning(":warning: Groq rate limit hit. Retrying in 3 seconds...")
+            time.sleep(3)
+            continue
+        break
+    # Handle success
     if response.status_code == 200:
         content = response.json()["choices"][0]["message"]["content"]
         logger.info(f"Raw model output: {content[:500]}")
-
-        match = re.search(r"\[.*\]", content, re.DOTALL)
+        # Try to capture JSON array or object cleanly
+        match = re.search(r"(\{.*\}|\[.*\])", content, re.DOTALL)
         if match:
-            content = match.group(0).strip()
-
+            content = match.group(1).strip()
+        # Fallback cleanup for truncated or malformed responses
+        content = content.strip()
+        if not (content.startswith("[") or content.startswith("{")):
+            start = content.find("[")
+            if start != -1:
+                content = content[start:]
+        if not (content.endswith("]") or content.endswith("}")):
+            end_sq = content.rfind("]")
+            end_cu = content.rfind("}")
+            cut = max(end_sq, end_cu)
+            if cut != -1:
+                content = content[: cut + 1]
         try:
             return json.loads(content)
         except json.JSONDecodeError:
@@ -103,6 +135,7 @@ Do NOT include markdown or extra text.
     else:
         logger.error(f"Groq API Error ({response.status_code}): {response.text}")
         return []
+
 
 
 # Generate Feedback

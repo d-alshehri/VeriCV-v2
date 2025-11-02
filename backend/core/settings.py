@@ -76,38 +76,54 @@ TEMPLATES = [
 WSGI_APPLICATION = "core.wsgi.application"
 
 
-# Database - Supabase PostgreSQL Configuration
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# Database
+# Priority:
+# 1) USE_SQLITE=1  -> local SQLite (no server needed)
+# 2) SUPABASE_POSTGRES_URL_NON_POOLING / SUPABASE_POSTGRES_URL -> Supabase via URL
+# 3) Legacy SUPABASE_* or DB_* env vars -> Postgres
 
-# Try Supabase connection first, fallback to legacy env vars
-SUPABASE_DB_URL = os.getenv("SUPABASE_POSTGRES_URL_NON_POOLING") or os.getenv("SUPABASE_POSTGRES_URL")
+import os
+from pathlib import Path
+import dj_database_url  # ensure it's in requirements.txt
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-if SUPABASE_DB_URL:
-    # Parse Supabase connection URL
-    # Format: postgresql://user:password@host:port/database
-    import dj_database_url
-    DATABASES = {
-        "default": dj_database_url.config(
-            default=SUPABASE_DB_URL,
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
-    }
-else:
-    # Fallback to individual Supabase env vars or legacy configuration
+USE_SQLITE = os.getenv("USE_SQLITE", "1") == "1"  # default to SQLite locally
+
+if USE_SQLITE:
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("SUPABASE_POSTGRES_DATABASE") or os.getenv("DB_NAME", "django"),
-            "USER": os.getenv("SUPABASE_POSTGRES_USER") or os.getenv("DB_USER", "django"),
-            "PASSWORD": os.getenv("SUPABASE_POSTGRES_PASSWORD") or os.getenv("DB_PASSWORD", ""),
-            "HOST": os.getenv("SUPABASE_POSTGRES_HOST") or os.getenv("DB_HOST", "localhost"),
-            "PORT": os.getenv("DB_PORT", "5432"),
-            "OPTIONS": {
-                "sslmode": "require",  # Supabase requires SSL
-            },
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+else:
+    SUPABASE_DB_URL = os.getenv("SUPABASE_POSTGRES_URL_NON_POOLING") or os.getenv("SUPABASE_POSTGRES_URL")
+    if SUPABASE_DB_URL:
+        DATABASES = {
+            "default": dj_database_url.config(
+                default=SUPABASE_DB_URL,
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
+        # Supabase usually requires SSL
+        DATABASES["default"]["OPTIONS"] = {**DATABASES["default"].get("OPTIONS", {}), "sslmode": "require"}
+    else:
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": os.getenv("SUPABASE_POSTGRES_DATABASE") or os.getenv("DB_NAME", "django"),
+                "USER": os.getenv("SUPABASE_POSTGRES_USER") or os.getenv("DB_USER", "django"),
+                "PASSWORD": os.getenv("SUPABASE_POSTGRES_PASSWORD") or os.getenv("DB_PASSWORD", ""),
+                "HOST": os.getenv("SUPABASE_POSTGRES_HOST") or os.getenv("DB_HOST", "localhost"),
+                "PORT": os.getenv("DB_PORT", "5432"),
+                "OPTIONS": {
+                    # local Postgres typically doesn't need SSL; keep require only for Supabase
+                    **({"sslmode": "require"} if os.getenv("DB_SSLMODE") == "require" else {})
+                },
+            }
+        }
+
 
 
 
