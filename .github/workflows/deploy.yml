@@ -15,6 +15,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node (for building frontend on runner)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend on runner
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
       - name: Setup SSH agent
         uses: webfactory/ssh-agent@v0.8.0
         with:
@@ -25,62 +38,46 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Deploy on server
+      - name: Upload dist/ to server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          rsync -az --delete -e "ssh -o StrictHostKeyChecking=no" \
+            frontend/dist/ "$SSH_USER@$SSH_HOST:/home/VeriCV/frontend/dist/"
+
+      - name: Backend deps + Django ops on server
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
         shell: bash
         run: |
-          set -euo pipefail
           ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" 'bash -s' <<'EOS'
           set -Eeuo pipefail
-
-          echo "=== VeriCV Production Deployment ==="
-
           cd /home/VeriCV
-
-          echo "[1/6] Pull latest code"
+          echo "[1/3] Pull latest backend code"
           git fetch origin main
           git checkout -f main
           git reset --hard origin/main
 
-          echo "[2/6] Backend deps + Django ops"
+          echo "[2/3] Install backend deps + migrate + collectstatic"
           /home/VeriCV/venv/bin/pip install -U pip
           /home/VeriCV/venv/bin/pip install -r backend/requirements.txt
           /home/VeriCV/venv/bin/python backend/manage.py migrate --noinput
           /home/VeriCV/venv/bin/python backend/manage.py collectstatic --noinput
 
-          echo "[3/6] Frontend build"
-          cd frontend
-          npm ci
-          npm run build
-          cd ..
-
-          echo "[4/6] Ensure permissions"
-          sudo touch /var/log/vericv-access.log /var/log/vericv-error.log
-          sudo chmod 644 /var/log/vericv-access.log /var/log/vericv-error.log
-          mkdir -p /home/VeriCV/backend/media
-          chmod 755 /home/VeriCV/backend/media
-          chmod -R a+rX /home/VeriCV/backend/staticfiles || true
-
-          echo "[5/6] Reload services"
+          echo "[3/3] Reload services"
           sudo nginx -t && sudo systemctl reload nginx
-          # restart your app service (adjust if you only use gunicorn)
           sudo systemctl restart vericv || sudo systemctl restart gunicorn || true
 
-          echo "[6/6] Health check"
-          curl -f http://127.0.0.1:8000/api/health -s >/dev/null 2>&1 || echo "Health endpoint not found (continuing)"
-
-          echo "=== Deployment complete ==="
+          # Optional: write version probe
+          date | sudo tee /home/VeriCV/frontend/dist/__version__.txt >/dev/null
           EOS
 
       - name: Notify success
         if: ${{ success() }}
-        run: |
-          echo "✅ Deployment Successful"
-          echo "Live: https://vericv.app"
+        run: echo "✅ Deployment Successful — https://vericv.app"
 
       - name: Notify failure
         if: ${{ failure() }}
-        run: |
-          echo "❌ Deployment Failed — check Action logs"
+        run: echo "❌ Deployment Failed — check Action logs"
