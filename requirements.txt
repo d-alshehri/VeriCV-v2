@@ -1,45 +1,11 @@
-# Backend (Python / FastAPI) 
-fastapi==0.103.0
-uvicorn[standard]==0.23.2
-sqlalchemy==2.0.26
-alembic==1.11.1
-psycopg2-binary==2.9.9
-pydantic==2.5.2
+# Backend (Python / Django / DRF)
+django>=4.2,<4.3
+djangorestframework==3.16.1
+django-cors-headers==4.9.0
+dj-database-url==2.2.0
 python-dotenv==1.0.1
-python-multipart==0.0.6
-passlib[bcrypt]==1.7.4
-python-jose==3.3.0
-jinja2==3.1.2
+djangorestframework-simplejwt==5.5.1
 requests==2.31.0
 aiohttp==3.9.0
 pytest==7.4.2
 pytest-asyncio==0.22.0
-dj-database-url>=2.1
-dj-database-url==2.2.0
-
-
-# Frontend dependencies
-axios
-clsx
-lucide-react
-react
-react-dom
-react-router-dom
-recharts
-tailwind-merge
-class-variance-authority
-framer-motion
-shadcn-ui
-
-# Development dependencies
-@types/react
-@types/react-dom
-@vitejs/plugin-react-swc
-autoprefixer
-eslint
-eslint-plugin-react-hooks
-eslint-plugin-react-refresh
-postcss
-tailwindcss
-vite
-typescript
