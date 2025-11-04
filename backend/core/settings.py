@@ -42,7 +42,8 @@ INSTALLED_APPS = [
 
     'corsheaders',
     'core',
-    'healthcheck',]
+    'healthcheck',
+]
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
@@ -82,9 +83,8 @@ WSGI_APPLICATION = "core.wsgi.application"
 # 2) SUPABASE_POSTGRES_URL_NON_POOLING / SUPABASE_POSTGRES_URL -> Supabase via URL
 # 3) Legacy SUPABASE_* or DB_* env vars -> Postgres
 
-import os
-from pathlib import Path
 import dj_database_url  # ensure it's in requirements.txt
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 USE_SQLITE = os.getenv("USE_SQLITE", "1") == "1"  # default to SQLite locally
@@ -118,14 +118,10 @@ else:
                 "HOST": os.getenv("SUPABASE_POSTGRES_HOST") or os.getenv("DB_HOST", "localhost"),
                 "PORT": os.getenv("DB_PORT", "5432"),
                 "OPTIONS": {
-                    # local Postgres typically doesn't need SSL; keep require only for Supabase
                     **({"sslmode": "require"} if os.getenv("DB_SSLMODE") == "require" else {})
                 },
             }
         }
-
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -145,7 +141,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -157,18 +152,18 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Congigure DRF + JWT
+# DRF + JWT
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -188,9 +183,6 @@ SIMPLE_JWT = {
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Allow local Vite dev server
-
-# CORS Configuration - properly split comma-separated origins
 # CORS Configuration
 if os.getenv("DEBUG", "True") == "True":
     CORS_ALLOWED_ORIGINS = [
@@ -210,3 +202,8 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 SUPABASE_URL = os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY") or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
+# --- Quiz configuration (NEW) ---
+QUIZ_SECONDS_PER_QUESTION = int(os.getenv("QUIZ_SECONDS_PER_QUESTION", "60"))  # 60s per question (tweak in .env)
+QUIZ_MAX_QUESTIONS = int(os.getenv("QUIZ_MAX_QUESTIONS", "20"))               # absolute cap
+QUIZ_DEFAULT_QUESTIONS = int(os.getenv("QUIZ_DEFAULT_QUESTIONS", "10"))       # fallback if not specified
