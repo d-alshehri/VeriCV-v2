@@ -17,6 +17,8 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./context/AuthContext";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import AuthTabs from "./pages/AuthTabs";
+
 
 const queryClient = new QueryClient();
 
@@ -26,25 +28,26 @@ function App() {
       <TooltipProvider>
         <BrowserRouter>
           <AuthProvider>
-          <Layout>
-            <Routes>
-              {/* Public */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/login" element={<SignIn />} />
-              <Route path="/register" element={<SignUp />} />
-              <Route path="/team" element={<TeamPage />} />
+            <Layout>
+              <Routes>
+                {/* Public */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/login" element={<AuthTabs initialTab="signin" />} />
+                <Route path="/register" element={<AuthTabs initialTab="signup" />} />
 
-              {/* Auth required */}
-              <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
-              {/* <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} /> */}
-              <Route path="/quiz" element={<ProtectedRoute><CvGateRoute><QuizPage /></CvGateRoute></ProtectedRoute>} />
-              <Route path="/results" element={<ProtectedRoute><ResultsPage /></ProtectedRoute>} />
+                <Route path="/team" element={<TeamPage />} />
 
-              {/* Catch-all */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Layout>
+                {/* Auth required */}
+                <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
+                {/* <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} /> */}
+                <Route path="/quiz" element={<ProtectedRoute><CvGateRoute><QuizPage /></CvGateRoute></ProtectedRoute>} />
+                <Route path="/results" element={<ProtectedRoute><ResultsPage /></ProtectedRoute>} />
+
+                {/* Catch-all */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Layout>
           </AuthProvider>
         </BrowserRouter>
         <Toaster />
