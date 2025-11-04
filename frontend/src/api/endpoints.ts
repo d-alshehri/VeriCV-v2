@@ -100,3 +100,41 @@ export async function submitAnswers(answers: any) {
   const { data } = await api.post("ai/submit/", { answers });
   return data;
 }
+
+export type GeneratedQuiz = {
+  questions: any[];
+  seconds_per_question: number;
+  max_questions: number;
+  duration_seconds: number;
+  deadline_iso: string;
+  // attempt_id?: number;
+};
+
+export async function generateQuiz(count?: number): Promise<GeneratedQuiz> {
+  const qs = typeof count === "number" ? `?count=${encodeURIComponent(count)}` : "";
+  const res = await fetch(`/api/quiz/generate/${qs}`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+    },
+  });
+  if (!res.ok) throw new Error(`Failed to generate quiz: ${res.status}`);
+  return res.json();
+}
+
+export async function submitQuiz(payload: {
+  attempt_id?: number; // if you persist attempts
+  answers: Record<string, any>;
+}) {
+  const res = await fetch(`/api/quiz/submit/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${localStorage.getItem("token") || ""}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`Failed to submit quiz: ${res.status}`);
+  return res.json();
+}
+
