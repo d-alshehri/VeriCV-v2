@@ -51,47 +51,56 @@ def generate_questions_from_cv(cv_text):
         "Content-Type": "application/json"
     }
     prompt = f"""
-You are an experienced HR and technical interviewer.
-
+You are an experienced HR and technical interviewer working for an AI-powered resume assessment platform called VeriCV.
 Analyze the following resume content carefully:
 ---
 {cv_text}
 ---
-
-Extract the main *technical* and *soft* skills mentioned.
-
-Then generate exactly **10 multiple-choice questions (MCQs)** that test those skills.
-
-Each question **must** include:
-- "question": the question text
-- "options": a list of 4 possible answers
-- "correct_index": integer 0–3 (index of correct option)
-- "skill": the specific skill being tested
-- "category": "technical" or "soft" (based on skill type)
-
-Example output:
+Extract all *technical* and *soft* skills mentioned or implied.
+For each extracted skill, generate **3 multiple-choice questions (MCQs)**:
+1 easy question
+1 medium question
+1 difficult question
+Each question must include:
+"question": the question text
+"options": a list of 4 possible answers
+"correct_index": integer 0–3 (index of correct option)
+"skill": the specific skill being tested
+"difficulty": "easy", "medium", or "hard"
+"category": "technical" or "soft" (based on skill type)
+Output format example:
 [
   {{
     "question": "Which command initializes a Git repository?",
     "options": ["git init", "git start", "git new", "git repo"],
     "correct_index": 0,
     "skill": "Git",
+    "difficulty": "easy",
     "category": "technical"
   }},
   {{
-    "question": "Which behavior best shows active listening?",
+    "question": "What is the purpose of a pull request in collaborative development?",
     "options": [
-      "Interrupting to respond quickly",
-      "Maintaining eye contact and summarizing what was said",
-      "Multitasking during the conversation",
-      "Talking more than listening"
+      "To create a new branch",
+      "To merge code changes into the main branch",
+      "To clone a repository",
+      "To delete old commits"
     ],
     "correct_index": 1,
-    "skill": "Communication",
-    "category": "soft"
+    "skill": "Git",
+    "difficulty": "medium",
+    "category": "technical"
+  }},
+  {{
+    "question": "Which Git command allows you to apply changes from one branch onto another without merging?",
+    "options": ["git rebase", "git stash", "git commit --amend", "git revert"],
+    "correct_index": 0,
+    "skill": "Git",
+    "difficulty": "hard",
+    "category": "technical"
   }}
 ]
-Return ONLY this JSON, no markdown, no text.
+Return ONLY this JSON array — no markdown, no extra text.
 """
     data = {"model": "groq/compound", "messages": [{"role": "user", "content": prompt}]}
     # Retry logic for rate limits
