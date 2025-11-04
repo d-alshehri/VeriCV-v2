@@ -11,4 +11,5 @@ router.register(r'results', ResultViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path("generate/", generate_quiz, name="generate_quiz"),
 ]
