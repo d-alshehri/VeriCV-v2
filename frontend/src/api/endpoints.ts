@@ -1,6 +1,30 @@
 import api from "./http";
 import { saveTokens, clearTokens, isAuthed } from "./auth";
 
+// Types for history endpoints
+export type Assessment = {
+  id?: number | string;
+  date?: string | null;
+  title?: string;
+  score?: number | null;
+  skills?: string[];
+  status?: string;
+  // allow extra fields without breaking
+  [key: string]: any;
+};
+
+export type HistorySummary = {
+  total?: number;
+  total_assessments?: number;
+  average_score?: number | null;
+  avg_score?: number | null;
+  last_activity?: string | null;
+  last_assessment_date?: string | null;
+  top_skill?: string | null;
+  // allow extra fields without breaking
+  [key: string]: any;
+};
+
 /* =====================
    Auth
    ===================== */
@@ -62,6 +86,11 @@ export async function uploadCV(file: File, title = "My CV") {
   f2.append("file", file, name);
   const { data } = await api.post("cv/", f2);
   return data; // often { id, title, file, ... }
+}
+
+export async function getCvCount() {
+  const { data } = await api.get("cv/count/");
+  return data as { count: number };
 }
 
 /* =====================

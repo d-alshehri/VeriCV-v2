@@ -10,7 +10,7 @@ import LandingPage from "./pages/LandingPage";
 import UploadPage from "./pages/UploadPage";
 import QuizPage from "./pages/QuizPage";
 import ResultsPage from "./pages/ResultsPage";
-// import DashboardPage from "./pages/DashboardPage";
+import DashboardPage from "@/pages/DashboardPage";
 import AboutPage from "./pages/AboutPage";
 import TeamPage from "./pages/TeamPage";
 import NotFound from "./pages/NotFound";
@@ -40,7 +40,7 @@ function App() {
 
                 {/* Auth required */}
                 <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
-                {/* <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} /> */}
+                <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                 <Route path="/quiz" element={<ProtectedRoute><CvGateRoute><QuizPage /></CvGateRoute></ProtectedRoute>} />
                 <Route path="/results" element={<ProtectedRoute><ResultsPage /></ProtectedRoute>} />
 

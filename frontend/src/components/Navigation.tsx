@@ -43,9 +43,8 @@ const Navigation = () => {
 
   const navItems = [
     { name: "Home", href: "/", icon: Home, show: true },
+    { name: "Dashboard", href: "/dashboard", icon: User, show: authed },
     { name: "Upload CV", href: "/upload", icon: FileText, show: authed },
-    // { name: "Quiz", href: "/quiz", icon: Brain, show: authed && cvReady },
-    // { name: "Dashboard", href: "/dashboard", icon: User, show: authed },
     { name: "About", href: "/about", icon: Info, show: true },
   ].filter((i) => i.show);
 
@@ -53,6 +52,9 @@ const Navigation = () => {
     try {
       await logout();
     } finally {
+      // best-effort notify listeners in this and other tabs
+      try { window.dispatchEvent(new Event("storage")); } catch {}
+      try { window.dispatchEvent(new Event("auth-changed")); } catch {}
       setAuthed(false);
       setCvReady(false);
       nav("/", { replace: true });
