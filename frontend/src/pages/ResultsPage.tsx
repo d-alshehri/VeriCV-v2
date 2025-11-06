@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,10 @@ import {
   Download,
   Share,
 } from "lucide-react";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
+import { toast } from "@/components/ui/sonner";
+import { addHistory } from "@/api/endpoints";
 
 console.log("ResultsPage loaded from:", import.meta.url);
 
@@ -20,6 +24,7 @@ export default function ResultsPage() {
   const location = useLocation() as any;
   const state = location?.state || {};
   console.log("Router state on load:", state);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   // ✅ Fallback: load from localStorage if state is empty
   if (!state?.overallScore && !state?.overall && !state?.skills) {
@@ -129,20 +134,96 @@ export default function ResultsPage() {
   const strengths = (summarized.skills || []).filter((s) => s.score >= 80);
   const improvements = (summarized.skills || []).filter((s) => s.score < 70);
 
+  // Persist the assessment to history once per visit
+  const persistedRef = useRef(false);
+  useEffect(() => {
+    if (persistedRef.current) return;
+    const overall = summarized?.overallScore;
+    const skillsArr: any[] = Array.isArray(summarized?.skills) ? summarized.skills : [];
+    if (typeof overall !== "number" || !skillsArr.length) return;
+
+    const skillsAnalyzed: Record<string, number> = {};
+    for (const s of skillsArr) {
+      if (s && typeof s === "object") {
+        const key = (s.skill ?? s.name ?? s.topic ?? "").toString();
+        if (key) skillsAnalyzed[key] = typeof s.score === "number" ? s.score : 0;
+      } else if (typeof s === "string") {
+        skillsAnalyzed[s] = 0;
+      }
+    }
+    const position = (state?.position || state?.jobTitle || state?.title || "Resume Assessment") as string;
+
+    (async () => {
+      try {
+        await addHistory({ position, average_score: overall, skills_analyzed: skillsAnalyzed });
+        persistedRef.current = true;
+      } catch (e) {
+        // non-blocking; console only
+        console.warn("Failed to persist assessment history", e);
+      }
+    })();
+  }, [summarized, state]);
+
   // ----- Actions -----
-  const downloadReport = () => {
-    const blob = new Blob([JSON.stringify(summarized, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "vericv-results.json";
-    a.click();
-    URL.revokeObjectURL(url);
+  const renderReportToPdfBlob = async (): Promise<Blob> => {
+    const el = reportRef.current;
+    if (!el) throw new Error("Report content not ready");
+    const canvas = await html2canvas(el, { scale: 2, backgroundColor: "#ffffff" });
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const ratio = Math.min(pageWidth / canvas.width, pageHeight / canvas.height);
+    const imgWidth = canvas.width * ratio;
+    const imgHeight = canvas.height * ratio;
+    const x = (pageWidth - imgWidth) / 2;
+    const y = (pageHeight - imgHeight) / 2;
+    pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight, undefined, "FAST");
+    return pdf.output("blob");
+  };
+
+  const downloadReport = async () => {
+    try {
+      const blob = await renderReportToPdfBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "vericv-results.pdf";
+      a.click();
+      URL.revokeObjectURL(url);
+      toast("Results PDF downloaded");
+    } catch (e: any) {
+      console.error("PDF download failed", e);
+      toast("Failed to generate PDF");
+    }
+  };
+
+  const shareResults = async () => {
+    try {
+      const blob = await renderReportToPdfBlob();
+      const file = new File([blob], "vericv-results.pdf", { type: "application/pdf" });
+      // Prefer Web Share API with files
+      if ((navigator as any).canShare && (navigator as any).canShare({ files: [file] }) && (navigator as any).share) {
+        await (navigator as any).share({
+          title: "My VeriCV Results",
+          text: "Here are my VeriCV quiz results.",
+          files: [file],
+        });
+        return;
+      }
+      // Fallback: copy link to clipboard
+      await navigator.clipboard.writeText(window.location.href);
+      toast("Link copied to clipboard");
+    } catch (e: any) {
+      console.error("Share failed", e);
+      toast("Sharing failed");
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-hero py-8">
-      <div className="container mx-auto px-4 max-w-6xl">
+      <div className="container mx-auto px-4 max-w-6xl" ref={reportRef}>
         {/* Header */}
         <div className="text-center mb-8">
           <Trophy className="w-16 h-16 gradient-primary text-white p-3 rounded-full mx-auto mb-4 shadow-glow" />
@@ -335,13 +416,7 @@ export default function ResultsPage() {
                 <Download className="w-4 h-4 mr-2" />
                 Download Report
               </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                }}
-              >
+              <Button variant="outline" size="lg" onClick={shareResults}>
                 <Share className="w-4 h-4 mr-2" />
                 Share Results
               </Button>
