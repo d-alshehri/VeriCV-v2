@@ -20,7 +20,7 @@ export type HistorySummary = {
   avg_score?: number | null;
   last_activity?: string | null;
   last_assessment_date?: string | null;
-  top_skill?: string | null;
+  top_skill?: string | null | { skill?: string; score?: number };
   // allow extra fields without breaking
   [key: string]: any;
 };
@@ -88,9 +88,32 @@ export async function uploadCV(file: File, title = "My CV") {
   return data; // often { id, title, file, ... }
 }
 
-export async function getCvCount() {
-  const { data } = await api.get("cv/count/");
-  return data as { count: number };
+/* =====================
+   CV Metrics
+   ===================== */
+
+export async function getCvCount(): Promise<number> {
+  try {
+    // Prefer explicit count endpoint if available
+    const res = await api.get("cv/count/");
+    const data = res.data;
+
+    if (typeof data === "number") return data;
+    if (data && typeof data.count === "number") return data.count;
+    if (Array.isArray(data)) return data.length;
+
+    return 0;
+  } catch {
+    // Fallback: try listing and count
+    try {
+      const res2 = await api.get("cv/list/");
+      const data2 = res2.data;
+      if (Array.isArray(data2)) return data2.length;
+    } catch {
+      /* ignore */
+    }
+    return 0;
+  }
 }
 
 /* =====================
@@ -130,29 +153,25 @@ export async function submitAnswers(answers: any) {
   return data;
 }
 
-// --- CV metrics helper (used by AboutPage) ---
-export async function getCvCount(): Promise<number> {
-  try {
-    // Prefer an explicit count endpoint if your backend exposes it
-    // e.g., /api/cv/count/ → { count: number }
-    const res = await api.get("/cv/count/");
-    const data = res.data;
+/* =====================
+   History/Dashboard
+   ===================== */
 
-    if (typeof data === "number") return data;
-    if (data && typeof data.count === "number") return data.count;
-    if (Array.isArray(data)) return data.length;
+export async function getHistorySummary(): Promise<HistorySummary> {
+  const { data } = await api.get("history/summary/");
+  return data;
+}
 
-    return 0;
-  } catch {
-    // Fallbacks in case /cv/count/ doesn't exist in dev:
-    // Try a generic list endpoint and count items, else return 0.
-    try {
-      const res2 = await api.get("/cv/list/");
-      const data2 = res2.data;
-      if (Array.isArray(data2)) return data2.length;
-    } catch {
-      /* ignore */
-    }
-    return 0;
-  }
+export async function getHistoryList(): Promise<Assessment[]> {
+  const { data } = await api.get("history/list/");
+  return data;
+}
+
+export async function addHistory(payload: {
+  position: string;
+  average_score: number;
+  skills_analyzed: Record<string, number> | Array<{ skill: string; score: number }>;
+}) {
+  const { data } = await api.post("history/add/", payload);
+  return data;
 }
