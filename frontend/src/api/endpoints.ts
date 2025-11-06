@@ -130,21 +130,29 @@ export async function submitAnswers(answers: any) {
   return data;
 }
 
-/* =====================
-   History
-   ===================== */
+// --- CV metrics helper (used by AboutPage) ---
+export async function getCvCount(): Promise<number> {
+  try {
+    // Prefer an explicit count endpoint if your backend exposes it
+    // e.g., /api/cv/count/ → { count: number }
+    const res = await api.get("/cv/count/");
+    const data = res.data;
 
-export async function getHistorySummary() {
-  const { data } = await api.get("history/summary/");
-  return (data || {}) as HistorySummary;
-}
+    if (typeof data === "number") return data;
+    if (data && typeof data.count === "number") return data.count;
+    if (Array.isArray(data)) return data.length;
 
-export async function getHistoryList() {
-  const { data } = await api.get("history/list/");
-  return Array.isArray(data) ? (data as Assessment[]) : [];
-}
-
-export async function addHistory(payload: Partial<Assessment> & Record<string, any> = {}) {
-  const { data } = await api.post("history/add/", payload);
-  return (data || {}) as Assessment;
+    return 0;
+  } catch {
+    // Fallbacks in case /cv/count/ doesn't exist in dev:
+    // Try a generic list endpoint and count items, else return 0.
+    try {
+      const res2 = await api.get("/cv/list/");
+      const data2 = res2.data;
+      if (Array.isArray(data2)) return data2.length;
+    } catch {
+      /* ignore */
+    }
+    return 0;
+  }
 }

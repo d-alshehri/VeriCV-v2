@@ -1,8 +1,9 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Brain, Users, Target, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
-import { login, register, uploadCV, getFeedback, generateQuiz, submitQuiz } from "@/api/endpoints";
+import { getCvCount } from "@/api/endpoints";
 
 const AboutPage = () => {
   const features = [
@@ -32,8 +33,34 @@ const AboutPage = () => {
     },
   ];
 
+  const [resumeCount, setResumeCount] = useState<string>("—");
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const data = await getCvCount();
+        if (mounted && typeof data?.count === "number") {
+          setResumeCount(data.count.toLocaleString());
+          return;
+        }
+      } catch {
+        // ignore and try fallback below
+      }
+      if (!mounted) return;
+      const lastId = localStorage.getItem("last_cv_id");
+      const approx = lastId ? parseInt(String(lastId), 10) : NaN;
+      if (!Number.isNaN(approx) && approx > 0) {
+        setResumeCount(approx.toLocaleString());
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const stats = [
-    { number: "500+", label: "Skills Assessed" },
+    { number: resumeCount, label: "Resume Analyzed" },
     { number: "95%", label: "Accuracy Rate" },
     { number: "24/7", label: "Available" },
   ];
@@ -45,8 +72,8 @@ const AboutPage = () => {
         <div className="container mx-auto px-4 text-center max-w-4xl">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">About VeriCV</h1>
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-            We're revolutionizing how tech professionals discover and validate their skills. 
-            Our AI-powered platform helps you understand your true strengths and prepare 
+            We're revolutionizing how tech professionals discover and validate their skills.
+            Our AI-powered platform helps you understand your true strengths and prepare
             for your next career opportunity.
           </p>
         </div>
@@ -58,8 +85,8 @@ const AboutPage = () => {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              To bridge the gap between what professionals know and what they can confidently 
-              demonstrate. We believe everyone deserves to understand their true capabilities 
+              To bridge the gap between what professionals know and what they can confidently
+              demonstrate. We believe everyone deserves to understand their true capabilities
               and have the tools to showcase them effectively.
             </p>
           </div>
@@ -128,7 +155,7 @@ const AboutPage = () => {
               <div>
                 <h3 className="text-xl font-semibold mb-2">Upload Your Resume</h3>
                 <p className="text-muted-foreground">
-                  Simply drag and drop your resume in PDF format. Our AI immediately 
+                  Simply drag and drop your resume in PDF format. Our AI immediately
                   begins analyzing your experience, skills, and achievements.
                 </p>
               </div>
@@ -141,7 +168,7 @@ const AboutPage = () => {
               <div>
                 <h3 className="text-xl font-semibold mb-2">AI Analysis</h3>
                 <p className="text-muted-foreground">
-                  Our advanced algorithms extract and categorize your technical and soft skills, 
+                  Our advanced algorithms extract and categorize your technical and soft skills,
                   creating a comprehensive skill profile based on your background.
                 </p>
               </div>
@@ -154,7 +181,7 @@ const AboutPage = () => {
               <div>
                 <h3 className="text-xl font-semibold mb-2">Personalized Quiz</h3>
                 <p className="text-muted-foreground">
-                  Take a tailored assessment that tests your knowledge in the areas identified 
+                  Take a tailored assessment that tests your knowledge in the areas identified
                   in your resume, ensuring relevant and challenging questions.
                 </p>
               </div>
@@ -167,7 +194,7 @@ const AboutPage = () => {
               <div>
                 <h3 className="text-xl font-semibold mb-2">Detailed Feedback</h3>
                 <p className="text-muted-foreground">
-                  Receive comprehensive results showing your strengths, areas for improvement, 
+                  Receive comprehensive results showing your strengths, areas for improvement,
                   and personalized suggestions.
                 </p>
               </div>
@@ -181,7 +208,7 @@ const AboutPage = () => {
         <div className="container mx-auto px-4 text-center max-w-2xl">
           <h2 className="text-3xl font-bold mb-4">Ready to Discover Your Potential?</h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Join tech professionals who have already used VeriCV to 
+            Join tech professionals who have already used VeriCV to
             advance their careers and build confidence in their abilities.
           </p>
 
@@ -197,3 +224,4 @@ const AboutPage = () => {
 };
 
 export default AboutPage;
+
