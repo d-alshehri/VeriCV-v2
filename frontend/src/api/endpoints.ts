@@ -100,3 +100,30 @@ export async function submitAnswers(answers: any) {
   const { data } = await api.post("ai/submit/", { answers });
   return data;
 }
+
+// --- CV metrics helper (used by AboutPage) ---
+export async function getCvCount(): Promise<number> {
+  try {
+    // Prefer an explicit count endpoint if your backend exposes it
+    // e.g., /api/cv/count/ → { count: number }
+    const res = await api.get("/cv/count/");
+    const data = res.data;
+
+    if (typeof data === "number") return data;
+    if (data && typeof data.count === "number") return data.count;
+    if (Array.isArray(data)) return data.length;
+
+    return 0;
+  } catch {
+    // Fallbacks in case /cv/count/ doesn't exist in dev:
+    // Try a generic list endpoint and count items, else return 0.
+    try {
+      const res2 = await api.get("/cv/list/");
+      const data2 = res2.data;
+      if (Array.isArray(data2)) return data2.length;
+    } catch {
+      /* ignore */
+    }
+    return 0;
+  }
+}
