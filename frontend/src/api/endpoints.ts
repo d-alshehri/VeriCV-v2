@@ -1,6 +1,30 @@
 import api from "./http";
 import { saveTokens, clearTokens, isAuthed } from "./auth";
 
+// Types for history endpoints
+export type Assessment = {
+  id?: number | string;
+  date?: string | null;
+  title?: string;
+  score?: number | null;
+  skills?: string[];
+  status?: string;
+  // allow extra fields without breaking
+  [key: string]: any;
+};
+
+export type HistorySummary = {
+  total?: number;
+  total_assessments?: number;
+  average_score?: number | null;
+  avg_score?: number | null;
+  last_activity?: string | null;
+  last_assessment_date?: string | null;
+  top_skill?: string | null;
+  // allow extra fields without breaking
+  [key: string]: any;
+};
+
 /* =====================
    Auth
    ===================== */
@@ -64,6 +88,11 @@ export async function uploadCV(file: File, title = "My CV") {
   return data; // often { id, title, file, ... }
 }
 
+export async function getCvCount() {
+  const { data } = await api.get("cv/count/");
+  return data as { count: number };
+}
+
 /* =====================
    AI: Quiz generation & submission
    ===================== */
@@ -99,4 +128,23 @@ export async function aiSubmitAnswers(
 export async function submitAnswers(answers: any) {
   const { data } = await api.post("ai/submit/", { answers });
   return data;
+}
+
+/* =====================
+   History
+   ===================== */
+
+export async function getHistorySummary() {
+  const { data } = await api.get("history/summary/");
+  return (data || {}) as HistorySummary;
+}
+
+export async function getHistoryList() {
+  const { data } = await api.get("history/list/");
+  return Array.isArray(data) ? (data as Assessment[]) : [];
+}
+
+export async function addHistory(payload: Partial<Assessment> & Record<string, any> = {}) {
+  const { data } = await api.post("history/add/", payload);
+  return (data || {}) as Assessment;
 }
