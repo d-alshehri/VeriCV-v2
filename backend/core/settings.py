@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'feedback',
     'quiz',
     'ai',
+    'assessment',
 
     'corsheaders',
     'core',
@@ -210,3 +211,5 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 SUPABASE_URL = os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY") or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
+print("Using database engine:", DATABASES["default"]["ENGINE"])

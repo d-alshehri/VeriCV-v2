@@ -14,15 +14,16 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-    # App routes
+    # Apps routes
     path('api/cv/', include('cv.urls')),
     path('api/feedback/', include('feedback.urls')),
     path('api/quiz/', include('quiz.urls')),
-    path('api/ai/', include('ai.urls')),          # ✅ mounts the AI routes we just defined
+    path('api/ai/', include('ai.urls')),          
     path('api/users/', include('users.urls')),
-
+    path("api/history/", include("assessment.urls")),
+    
     # Health
-    path('api/health/', health),                  # ✅ single, working health route
+    path('api/health/', health),                  
 ]
 
 # Serve media files in development
