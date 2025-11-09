@@ -151,26 +151,87 @@ Write feedback that:
 
 
 # --- Job Match Analysis (Placeholder for AI Team) ---
+# --- Job Match Analysis (AI-Powered + Improvement Advice) ---
 def analyze_job_match(cv_text, job_description, position):
     """
-    This is a placeholder for the AI team's Job Matching logic.
-
-    The AI engineer should implement logic that:
-    1. Compares the candidate's CV with the job description and position title.
-    2. Calculates a match score (0–100).
-    3. Extracts missing or recommended keywords.
-    4. Generates a professional, short summary.
-
-    The function must return a Python dictionary in the following format:
-    {
-        "match_score": <int>,
-        "missing_keywords": [<list of strings>],
-        "summary": "<string>"
-    }
+    Compare a candidate’s CV with a job posting and return an AI-based match report.
+    Includes match score, missing keywords, professional feedback, and advice for improvement.
     """
-    # Temporary placeholder until the AI engineer adds their model
-    return {
-        "match_score": 0,
-        "missing_keywords": [],
-        "summary": "Job match AI model not yet implemented.",
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
     }
+
+    # --- AI Prompt ---
+    prompt = f"""
+You are a senior recruiter, HR expert, and resume coach working for an AI platform called VeriCV.
+
+Your task is to analyze how well this resume fits the following job:
+
+---
+Job Title: {position}
+Job Description: {job_description}
+---
+Candidate Resume:
+{cv_text}
+---
+
+Please do the following:
+
+1. Evaluate how well the resume matches the job title and description.
+2. Give a **match score (0–100)** indicating the overall compatibility.
+3. List **missing or weak keywords/skills** that could improve the match.
+4. Write a **short professional feedback summary (2–3 sentences)**, from an HR perspective.
+5. Suggest **clear, actionable advice** explaining *what the candidate should change* in the CV to improve the match.
+
+Return **only valid JSON** in this exact format — no text or markdown before or after:
+{{
+  "match_score": <integer>,
+  "missing_keywords": [<list of strings>],
+  "summary": "<short feedback summary>",
+  "improvement_advice": "<specific advice for improving the CV>"
+}}
+
+Example:
+{{
+  "match_score": 78,
+  "missing_keywords": ["REST APIs", "Team Leadership"],
+  "summary": "Good technical foundation but lacks API integration and leadership experience.",
+  "improvement_advice": "Include a section describing REST API projects and leadership roles to improve your match score."
+}}
+"""
+
+    # --- Send Request to Groq ---
+    data = {"model": "groq/compound", "messages": [{"role": "user", "content": prompt}]}
+    response = requests.post(url, headers=headers, json=data, timeout=60)
+
+    # --- Handle Response ---
+    if response.status_code == 200:
+        try:
+            content = response.json()["choices"][0]["message"]["content"]
+            # Extract JSON only
+            match = re.search(r"(\{.*\})", content, re.DOTALL)
+            if match:
+                content = match.group(1).strip()
+            result = json.loads(content)
+            return {
+                "match_score": int(result.get("match_score", 0)),
+                "missing_keywords": result.get("missing_keywords", []),
+                "summary": result.get("summary", "No feedback provided."),
+                "improvement_advice": result.get("improvement_advice", "No advice provided.")
+            }
+        except Exception as e:
+            logger.error(f"Job match parsing error: {e}")
+            return {
+                "match_score": 0,
+                "missing_keywords": [],
+                "summary": "Error reading AI response."
+            }
+    else:
+        logger.error(f"Groq API Error ({response.status_code}): {response.text}")
+        return {
+            "match_score": 0,
+            "missing_keywords": [],
+            "summary": "AI service unavailable."
+        }
