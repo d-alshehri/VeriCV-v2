@@ -47,7 +47,7 @@ const Navigation = () => {
     //{ name: "Dashboard", href: "/dashboard", icon: User, show: authed },
     { name: "Upload CV", href: "/upload", icon: FileText, show: authed },
     //{ name: "Job Matcher", href: "/matcher", icon: Search, show: authed },
-    { name: "Job Matcher", href: "/job-match", icon: Target },
+    { name: "Job Matcher", href: "/job-match", icon: Target, show: authed },
     { name: "About", href: "/about", icon: Info, show: true },
   ].filter((i) => i.show);
 
