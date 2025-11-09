@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'quiz',
     'ai',
     'assessment',
+    'matcher',
 
     'corsheaders',
     'core',

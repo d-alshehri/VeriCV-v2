@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-#  Extract Text 
+# --- Extract Text ---
 def extract_text_from_pdf(file):
     """Extract text from a PDF file (supports OCR for scanned resumes)."""
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
@@ -43,6 +43,7 @@ def extract_text_from_pdf(file):
         os.remove(temp_path)
 
 
+# --- Generate Quiz Questions ---
 def generate_questions_from_cv(cv_text):
     """Send resume text to Groq API and generate professional questions."""
     url = "https://api.groq.com/openai/v1/chat/completions"
@@ -50,6 +51,7 @@ def generate_questions_from_cv(cv_text):
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
     }
+
     prompt = f"""
 You are an experienced HR and technical interviewer working for an AI-powered resume assessment platform called VeriCV.
 Analyze the following resume content carefully:
@@ -77,33 +79,12 @@ Output format example:
     "skill": "Git",
     "difficulty": "easy",
     "category": "technical"
-  }},
-  {{
-    "question": "What is the purpose of a pull request in collaborative development?",
-    "options": [
-      "To create a new branch",
-      "To merge code changes into the main branch",
-      "To clone a repository",
-      "To delete old commits"
-    ],
-    "correct_index": 1,
-    "skill": "Git",
-    "difficulty": "medium",
-    "category": "technical"
-  }},
-  {{
-    "question": "Which Git command allows you to apply changes from one branch onto another without merging?",
-    "options": ["git rebase", "git stash", "git commit --amend", "git revert"],
-    "correct_index": 0,
-    "skill": "Git",
-    "difficulty": "hard",
-    "category": "technical"
   }}
 ]
 Return ONLY this JSON array — no markdown, no extra text.
 """
     data = {"model": "groq/compound", "messages": [{"role": "user", "content": prompt}]}
-    # Retry logic for rate limits
+
     for attempt in range(3):
         response = requests.post(url, headers=headers, json=data, timeout=45)
         if response.status_code == 429:
@@ -111,26 +92,14 @@ Return ONLY this JSON array — no markdown, no extra text.
             time.sleep(3)
             continue
         break
-    # Handle success
+
     if response.status_code == 200:
         content = response.json()["choices"][0]["message"]["content"]
         logger.info(f"Raw model output: {content[:500]}")
-        # Try to capture JSON array or object cleanly
         match = re.search(r"(\{.*\}|\[.*\])", content, re.DOTALL)
         if match:
             content = match.group(1).strip()
-        # Fallback cleanup for truncated or malformed responses
-        content = content.strip()
-        if not (content.startswith("[") or content.startswith("{")):
-            start = content.find("[")
-            if start != -1:
-                content = content[start:]
-        if not (content.endswith("]") or content.endswith("}")):
-            end_sq = content.rfind("]")
-            end_cu = content.rfind("}")
-            cut = max(end_sq, end_cu)
-            if cut != -1:
-                content = content[: cut + 1]
+
         try:
             return json.loads(content)
         except json.JSONDecodeError:
@@ -146,8 +115,7 @@ Return ONLY this JSON array — no markdown, no extra text.
         return []
 
 
-
-# Generate Feedback
+# --- Generate Feedback ---
 def generate_feedback_from_ai(wrong_answers, percent):
     """Generate professional feedback based on user's wrong answers."""
     if not wrong_answers:
@@ -174,9 +142,35 @@ Write feedback that:
 """
 
     data = {"model": "groq/compound-mini", "messages": [{"role": "user", "content": prompt}]}
-
     response = requests.post(url, headers=headers, json=data, timeout=30)
+
     if response.status_code == 200:
         return response.json()["choices"][0]["message"]["content"]
     else:
         return f"Error while generating feedback: {response.text}"
+
+
+# --- Job Match Analysis (Placeholder for AI Team) ---
+def analyze_job_match(cv_text, job_description, position):
+    """
+    This is a placeholder for the AI team's Job Matching logic.
+
+    The AI engineer should implement logic that:
+    1. Compares the candidate's CV with the job description and position title.
+    2. Calculates a match score (0–100).
+    3. Extracts missing or recommended keywords.
+    4. Generates a professional, short summary.
+
+    The function must return a Python dictionary in the following format:
+    {
+        "match_score": <int>,
+        "missing_keywords": [<list of strings>],
+        "summary": "<string>"
+    }
+    """
+    # Temporary placeholder until the AI engineer adds their model
+    return {
+        "match_score": 0,
+        "missing_keywords": [],
+        "summary": "Job match AI model not yet implemented.",
+    }

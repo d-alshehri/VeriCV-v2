@@ -21,7 +21,9 @@ urlpatterns = [
     path('api/ai/', include('ai.urls')),          
     path('api/users/', include('users.urls')),
     path("api/history/", include("assessment.urls")),
-    
+    path("api/matcher/", include("matcher.urls")),
+
+
     # Health
     path('api/health/', health),                  
 ]
