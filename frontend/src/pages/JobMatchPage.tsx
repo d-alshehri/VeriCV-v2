@@ -77,6 +77,21 @@ const JobMatchPage = () => {
         title: "Analysis Complete",
         description: `Match score: ${resultData.match_score}%`,
       });
+
+      try {
+        const cacheKey = "job_match_cache";
+        const raw = localStorage.getItem(cacheKey);
+        const arr: any[] = raw ? JSON.parse(raw) : [];
+        arr.unshift({
+          position: data.position,
+          match_score: resultData.match_score,
+          missing_keywords: resultData.missing_keywords,
+          summary: resultData.summary,
+          timestamp: Date.now(),
+        });
+        // keep last 20 entries
+        localStorage.setItem(cacheKey, JSON.stringify(arr.slice(0, 20)));
+      } catch {}
     } catch (error: any) {
       const msg = error?.response?.data?.error || error?.message || "Failed to analyze CV match";
       toast({ title: "Error", description: msg, variant: "destructive" });
