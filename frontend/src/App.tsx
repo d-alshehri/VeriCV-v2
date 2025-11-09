@@ -18,6 +18,7 @@ import { AuthProvider } from "./context/AuthContext";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import AuthTabs from "./pages/AuthTabs";
+import JobMatchPage from "./pages/JobMatchPage";
 
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ function App() {
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                 <Route path="/quiz" element={<ProtectedRoute><CvGateRoute><QuizPage /></CvGateRoute></ProtectedRoute>} />
                 <Route path="/results" element={<ProtectedRoute><ResultsPage /></ProtectedRoute>} />
+                <Route path="/matcher" element={<ProtectedRoute><JobMatchPage /></ProtectedRoute>} />
 
                 {/* Catch-all */}
                 <Route path="*" element={<NotFound />} />
