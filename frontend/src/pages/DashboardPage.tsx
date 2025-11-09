@@ -261,9 +261,9 @@ export default function DashboardPage() {
                   <thead className="text-muted-foreground">
                     <tr className="text-left">
                       <th className="py-2 pr-3 font-medium">Date</th>
-                      <th className="py-2 pr-3 font-medium">Title</th>
+                      <th className="py-2 pr-3 font-medium">Position</th>
                       <th className="py-2 pr-3 font-medium">Score</th>
-                      <th className="py-2 pr-3 font-medium">Skills</th>
+                      <th className="py-2 pr-3 font-medium">Top Skills</th>
                       <th className="py-2 pr-3 font-medium">Action</th>
                     </tr>
                   </thead>
