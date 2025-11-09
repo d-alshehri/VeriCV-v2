@@ -340,11 +340,6 @@ export default function DashboardPage() {
                           <td className="py-2 pr-3 max-w-[28ch] truncate">{a.title ?? "Assessment"}</td>
                           <td className="py-2 pr-3">{score}</td>
                           <td className="py-2 pr-3">
-                            <Badge variant={isJob ? "default" : "outline"} className="text-xs">
-                              {isJob ? "Job Match" : "Quiz"}
-                            </Badge>
-                          </td>
-                          <td className="py-2 pr-3">
                             <div className="flex flex-wrap gap-1">
                               {skills.map((s) => (
                                 <Badge key={s} variant="outline" className="text-xs">
@@ -355,6 +350,11 @@ export default function DashboardPage() {
                                 <Badge variant="outline" className="text-xs">+{a.skills.length - 4} more</Badge>
                               )}
                             </div>
+                          </td>
+                          <td className="py-2 pr-3">
+                            <Badge variant={isJob ? "default" : "outline"} className="text-xs">
+                              {isJob ? "Job Match" : "Quiz"}
+                            </Badge>
                           </td>
                           <td className="py-2 pr-3">
                             {isJob && Array.isArray((a as any).missing_keywords) && (a as any).missing_keywords.length > 0 ? (
