@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, FileText, User, Home, Info, LogOut, LogIn, UserPlus } from "lucide-react";
+import { Menu, X, FileText, User, Home, Info, LogOut, LogIn, UserPlus, Search } from "lucide-react";
 import { isAuthenticated, hasUploadedCV, logout, subscribeAuth } from "@/utils/auth";
 
 const Navigation = () => {
@@ -45,6 +45,7 @@ const Navigation = () => {
     { name: "Home", href: "/", icon: Home, show: true },
     { name: "Dashboard", href: "/dashboard", icon: User, show: authed },
     { name: "Upload CV", href: "/upload", icon: FileText, show: authed },
+    { name: "Job Matcher", href: "/matcher", icon: Search, show: authed },
     { name: "About", href: "/about", icon: Info, show: true },
   ].filter((i) => i.show);
 
