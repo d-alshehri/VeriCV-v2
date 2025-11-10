@@ -25,7 +25,6 @@ _Developed by Holberton School × Tuwaiq Academy_ 🇸🇦
 ![Backend](https://img.shields.io/badge/Backend-Django-092E20?style=for-the-badge&logo=django)
 ![Frontend](https://img.shields.io/badge/Frontend-React-61DAFB?style=for-the-badge&logo=react)
 ![AI](https://img.shields.io/badge/AI-Groq%20%7C%20OpenRouter-F7941E?style=for-the-badge&logo=openai)
-![Design](https://img.shields.io/badge/Design-Lovable-FF69B4?style=for-the-badge&logo=figma)
 ![Docs](https://img.shields.io/badge/Planning-Obsidian-8A2BE2?style=for-the-badge&logo=obsidian)
 
 </div>
