@@ -2,7 +2,18 @@
 import { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, FileText, User, Home, Info, LogOut, LogIn, UserPlus, Search, LayoutDashboard, Target } from "lucide-react";
+import {
+  Menu,
+  X,
+  FileText,
+  Home,
+  Info,
+  LogOut,
+  LogIn,
+  UserPlus,
+  LayoutDashboard,
+  Target,
+} from "lucide-react";
 import { isAuthenticated, hasUploadedCV, logout, subscribeAuth } from "@/utils/auth";
 
 const Navigation = () => {
@@ -22,9 +33,9 @@ const Navigation = () => {
 
     const unsub = subscribeAuth(refresh);
 
-    // Optional fallbacks
-    const onStorage = () => refresh(); // cross-tab
-    const onDomEvent = () => refresh(); // same-tab custom event
+    // cross-tab + same-tab custom event
+    const onStorage = () => refresh();
+    const onDomEvent = () => refresh();
     window.addEventListener("storage", onStorage);
     window.addEventListener("auth-changed", onDomEvent);
 
@@ -35,19 +46,18 @@ const Navigation = () => {
     };
   }, []);
 
-  // Also re-check on route changes
+  // Re-check on route changes
   useEffect(() => {
     setAuthed(isAuthenticated());
     setCvReady(hasUploadedCV());
   }, [location.key]);
 
+  // Final labels (consistent with "CV")
   const navItems = [
     { name: "Home", href: "/", icon: Home, show: true },
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, show: authed },
-    //{ name: "Dashboard", href: "/dashboard", icon: User, show: authed },
     { name: "Upload CV", href: "/upload", icon: FileText, show: authed },
-    //{ name: "Job Matcher", href: "/matcher", icon: Search, show: authed },
-    { name: "Job Matcher", href: "/matcher", icon: Target, show: authed },
+    { name: "Match Jobs", href: "/matcher", icon: Target, show: authed },
+    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, show: authed },
     { name: "About", href: "/about", icon: Info, show: true },
   ].filter((i) => i.show);
 
