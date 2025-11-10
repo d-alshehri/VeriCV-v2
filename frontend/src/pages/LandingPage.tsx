@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Upload, Brain, BarChart3, CheckCircle, FileText, Users } from "lucide-react";
+import { Upload, Brain, BarChart3, CheckCircle, FileText, Users, Target } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-bg.jpg";
 
@@ -8,46 +8,57 @@ const LandingPage = () => {
   const steps = [
     {
       icon: Upload,
-      title: "Upload",
-      description: "Upload your resume in PDF format",
+      title: "Upload CV",
+      description: "Add your CV in PDF or Word format.",
     },
     {
       icon: Brain,
-      title: "Analyze",
-      description: "AI extracts and categorizes your skills",
+      title: "AI Analysis",
+      description: "We extract and organize your skills automatically.",
     },
     {
       icon: CheckCircle,
-      title: "Quiz",
-      description: "Take a personalized skill assessment",
+      title: "Skill Check",
+      description: "Take a tailored quiz to validate your skills.",
+    },
+    {
+      icon: Target,
+      title: "Job Match",
+      description: "Paste a job description to see your match score.",
     },
     {
       icon: BarChart3,
-      title: "Feedback",
-      description: "Get detailed insights and improvement tips",
+      title: "Actionable Feedback",
+      description: "Get clear gaps, tips, and next steps to improve.",
     },
   ];
 
   const features = [
     {
       icon: FileText,
-      title: "Smart Resume Analysis",
-      description: "AI-powered extraction of technical and soft skills from your resume",
+      title: "Smart CV Analysis",
+      description: "AI-powered extraction of technical and soft skills from your CV.",
     },
     {
       icon: Brain,
       title: "Personalized Quizzes",
-      description: "Tailored assessments based on your specific skill set",
+      description: "Assessments tailored to your exact skill profile.",
+    },
+    {
+      icon: Target,
+      title: "Job Match Scoring",
+      description:
+        "Match your CV to any job and get an instant score plus missing keywords.",
     },
     {
       icon: BarChart3,
-      title: "Detailed Feedback",
-      description: "Comprehensive reports with actionable improvement suggestions",
+      title: "Detailed Reports",
+      description: "Concise, actionable insights you can apply right away.",
     },
     {
       icon: Users,
-      title: "Career Ready",
-      description: "Build confidence and stand out in tech job interviews",
+      title: "Interview-Ready",
+      description: "Build confidence and highlight strengths that matter.",
     },
   ];
 
@@ -66,15 +77,18 @@ const LandingPage = () => {
               VeriCV
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-4">
-              Discover your real strengths.
+              See where your skills shine.
             </p>
             <p className="text-lg md:text-xl text-muted-foreground mb-12">
-              Be job-ready.
+              Upload your CV, validate your skills, and match to real jobs.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild variant="hero" size="xl" className="animate-float">
-                <Link to="/upload">Upload Resume</Link>
+                <Link to="/upload">Upload CV</Link>
+              </Button>
+              <Button asChild variant="hero" size="xl" className="animate-float animation-delay-150">
+                <Link to="/matcher">Match CV to Job</Link>
               </Button>
             </div>
           </div>
@@ -85,13 +99,13 @@ const LandingPage = () => {
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">How it works</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Get personalized insights into your skills in just four simple steps
+              Get a verified view of your skills and your fit for any role.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
             {steps.map((step, index) => (
               <Card key={step.title} className="card-hover text-center">
                 <CardContent className="p-6">
@@ -114,9 +128,9 @@ const LandingPage = () => {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose VeriCV?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why choose VeriCV?</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Advanced AI technology meets career development
+              Practical AI for real career outcomes.
             </p>
           </div>
 
@@ -143,13 +157,18 @@ const LandingPage = () => {
       {/* CTA Section */}
       <section className="py-20 gradient-hero">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Get Started?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to get started?</h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Upload your resume and discover your true potential with AI-powered analysis
+            Upload your CV, verify your skills, and get a job match score in minutes.
           </p>
-          <Button asChild variant="hero" size="xl">
-            <Link to="/upload">Upload Your Resume</Link>
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild variant="hero" size="xl">
+              <Link to="/upload">Upload CV</Link>
+            </Button>
+            <Button asChild variant="hero" size="xl">
+              <Link to="/matcher">Match CV to Job</Link>
+            </Button>
+          </div>
         </div>
       </section>
     </div>
