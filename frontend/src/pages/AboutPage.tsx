@@ -1,3 +1,4 @@
+// src/pages/AboutPage.tsx
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,31 +10,31 @@ const AboutPage = () => {
   const features = [
     {
       icon: Brain,
-      title: "AI-Powered Analysis",
+      title: "AI-Powered CV Analysis",
       description:
-        "Advanced machine learning algorithms analyze your resume to identify and categorize both technical and soft skills with high accuracy.",
+        "Advanced models identify and categorize your technical and soft skills directly from your CV.",
     },
     {
       icon: Target,
-      title: "Personalized Assessments",
+      title: "Personalized Skill Quiz",
       description:
-        "Every quiz is tailored to your specific skill set, ensuring relevant and challenging questions that accurately measure your abilities.",
+        "Assessments are tailored to your profile so questions are always relevant to you.",
     },
     {
       icon: Zap,
-      title: "Instant Feedback",
+      title: "Instant, Actionable Feedback",
       description:
-        "Get immediate insights into your strengths and areas for improvement with detailed explanations and learning resources.",
+        "See strengths, gaps, and next steps so you can level up quickly and confidently.",
     },
     {
       icon: Users,
-      title: "Industry Relevant",
+      title: "Career-Focused Guidance",
       description:
-        "Our assessments are designed with input from tech industry professionals to match real-world job requirements.",
+        "Each recommendation is centered around what will genuinely improve your job-search outcomes.",
     },
   ];
 
-  const [resumeCount, setResumeCount] = useState<string>("—");
+  const [cvCount, setCvCount] = useState<string>("—");
 
   useEffect(() => {
     let mounted = true;
@@ -41,17 +42,15 @@ const AboutPage = () => {
       try {
         const data = await getCvCount();
         if (mounted && typeof data?.count === "number") {
-          setResumeCount(data.count.toLocaleString());
+          setCvCount(data.count.toLocaleString());
           return;
         }
-      } catch {
-        // ignore and try fallback below
-      }
+      } catch {}
       if (!mounted) return;
       const lastId = localStorage.getItem("last_cv_id");
       const approx = lastId ? parseInt(String(lastId), 10) : NaN;
       if (!Number.isNaN(approx) && approx > 0) {
-        setResumeCount(approx.toLocaleString());
+        setCvCount(approx.toLocaleString());
       }
     })();
     return () => {
@@ -60,38 +59,34 @@ const AboutPage = () => {
   }, []);
 
   const stats = [
-    { number: resumeCount, label: "Resume Analyzed" },
-    { number: "95%", label: "Accuracy Rate" },
-    { number: "24/7", label: "Available" },
+    { number: cvCount, label: "CVs Analyzed" },
+    { number: "95%", label: "Analysis Confidence" },
+    { number: "24/7", label: "Availability" },
   ];
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
+      {/* Hero */}
       <section className="gradient-hero py-20">
         <div className="container mx-auto px-4 text-center max-w-4xl">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">About VeriCV</h1>
           <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-            We're revolutionizing how tech professionals discover and validate their skills.
-            Our AI-powered platform helps you understand your true strengths and prepare
-            for your next career opportunity.
+            We help you discover, validate, and communicate your skills. VeriCV turns your CV into a clear skill profile,
+            tailored quizzes, and feedback you can act on.
           </p>
         </div>
       </section>
 
-      {/* Mission Section */}
+      {/* Mission + Stats */}
       <section className="py-20">
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              To bridge the gap between what professionals know and what they can confidently
-              demonstrate. We believe everyone deserves to understand their true capabilities
-              and have the tools to showcase them effectively.
+              Bridge the gap between potential and proof. We make it simple to understand what you’re great at and how to get even better.
             </p>
           </div>
 
-          {/* Centered Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 justify-items-center max-w-3xl mx-auto mb-16">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
@@ -105,35 +100,35 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Features */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4">Why Choose VeriCV?</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Our platform combines cutting-edge AI technology with practical career development insights.
+              Practical career outcomes powered by solid AI fundamentals.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            {features.map((feature) => (
-              <Card key={feature.title} className="card-hover">
-                <CardHeader>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 gradient-primary rounded-lg flex items-center justify-center">
-                      <feature.icon className="w-6 h-6 text-white" />
-                    </div>
-                    <CardTitle className="text-xl">{feature.title}</CardTitle>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          {features.map((feature) => (
+            <Card key={feature.title} className="card-hover">
+              <CardHeader>
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 gradient-primary rounded-lg flex items-center justify-center">
+                    <feature.icon className="w-6 h-6 text-white" />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {feature.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  <CardTitle className="text-xl">{feature.title}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground leading-relaxed">
+                  {feature.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
         </div>
       </section>
 
@@ -142,60 +137,40 @@ const AboutPage = () => {
         <div className="container mx-auto px-4 max-w-4xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4">How It Works</h2>
-            <p className="text-lg text-muted-foreground">
-              Simple, fast, and accurate - get insights in minutes, not hours.
-            </p>
+            <p className="text-lg text-muted-foreground">From CV to clarity in minutes.</p>
           </div>
 
           <div className="space-y-8">
             <div className="flex items-start space-x-6">
-              <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                1
-              </div>
+              <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">1</div>
               <div>
-                <h3 className="text-xl font-semibold mb-2">Upload Your Resume</h3>
-                <p className="text-muted-foreground">
-                  Simply drag and drop your resume in PDF format. Our AI immediately
-                  begins analyzing your experience, skills, and achievements.
-                </p>
+                <h3 className="text-xl font-semibold mb-2">Upload Your CV</h3>
+                <p className="text-muted-foreground">Drag and drop your PDF. We start analyzing instantly.</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-6">
-              <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                2
-              </div>
+              <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">2</div>
               <div>
-                <h3 className="text-xl font-semibold mb-2">AI Analysis</h3>
-                <p className="text-muted-foreground">
-                  Our advanced algorithms extract and categorize your technical and soft skills,
-                  creating a comprehensive skill profile based on your background.
-                </p>
+                <h3 className="text-xl font-semibold mb-2">AI Skill Extraction</h3>
+                <p className="text-muted-foreground">We map your technical and soft skills into a clear profile.</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-6">
-              <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                3
-              </div>
+              <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">3</div>
               <div>
                 <h3 className="text-xl font-semibold mb-2">Personalized Quiz</h3>
-                <p className="text-muted-foreground">
-                  Take a tailored assessment that tests your knowledge in the areas identified
-                  in your resume, ensuring relevant and challenging questions.
-                </p>
+                <p className="text-muted-foreground">Questions are generated from your profile—relevant by design.</p>
               </div>
             </div>
 
             <div className="flex items-start space-x-6">
-              <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                4
-              </div>
+              <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">4</div>
               <div>
-                <h3 className="text-xl font-semibold mb-2">Detailed Feedback</h3>
+                <h3 className="text-xl font-semibold mb-2">Feedback & Job Match</h3>
                 <p className="text-muted-foreground">
-                  Receive comprehensive results showing your strengths, areas for improvement,
-                  and personalized suggestions.
+                  See strengths and gaps, then compare your CV to a job and get a match score with missing-keyword tips.
                 </p>
               </div>
             </div>
@@ -203,18 +178,20 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Contact / CTA */}
+      {/* CTA */}
       <section className="py-20 gradient-hero">
         <div className="container mx-auto px-4 text-center max-w-2xl">
           <h2 className="text-3xl font-bold mb-4">Ready to Discover Your Potential?</h2>
           <p className="text-lg text-muted-foreground mb-8">
-            Join tech professionals who have already used VeriCV to
-            advance their careers and build confidence in their abilities.
+            Join candidates using VeriCV to validate skills and target better-fit roles.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <Button asChild variant="hero" size="lg">
-              <Link to="/upload">Start Your Assessment</Link>
+              <Link to="/upload">Upload CV</Link>
+            </Button>
+            <Button asChild variant="hero" size="lg">
+              <Link to="/matcher">Try Job Match</Link>
             </Button>
           </div>
         </div>
@@ -224,4 +201,3 @@ const AboutPage = () => {
 };
 
 export default AboutPage;
-
