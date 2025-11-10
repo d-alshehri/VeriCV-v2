@@ -11,7 +11,7 @@
 
 <div align="center">
 
-<img src="./assets/logo.png" width="150" alt="VeriCV Logo" />
+<img width="302" height="297" alt="Image" src="https://github.com/user-attachments/assets/2ccbd793-084e-4900-bd6f-f581892452f8" />
 
 #  VeriCV — Smarter Interview Preparation with AI  
 
