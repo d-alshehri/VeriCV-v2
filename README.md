@@ -1,7 +1,7 @@
-# VeriCV 🎯  
+# VeriCV 
 **AI-Powered Resume Analyzer**
 
-### 🏫 Holberton School Saudi Arabia — Cohort 1 (Feb – Nov 2025)
+### Holberton School Saudi Arabia — Cohort 1 (Feb – Nov 2025)
 **Team Members**  
 - Leen Mohammed Alsaleh — [10691@holbertonstudents.com](mailto:10691@holbertonstudents.com)  
 - Haneen Nasser Aldawood — [10684@holbertonstudents.com](mailto:10684@holbertonstudents.com)  
@@ -48,7 +48,7 @@ Preparing for interviews can be overwhelming — especially when you don’t kno
 ---
 
 
-## 🚀 Key Features
+##  Key Features
 - **AI Resume Analysis:** Upload your CV (PDF) to extract relevant skills automatically.  
 - **Smart Quiz Generation:** Custom skill-based quizzes generated via Groq API.  
 - **Instant Feedback:** Personalized recommendations to strengthen weak areas.  
@@ -57,7 +57,7 @@ Preparing for interviews can be overwhelming — especially when you don’t kno
 
 ---
 
-## 🎯 Objectives
+##  Objectives
 1. Allow users to upload resumes and automatically extract both technical & soft skills.  
 2. Generate short, customized quizzes to measure actual proficiency.  
 3. Deliver instant, AI-based feedback reports.  
@@ -65,14 +65,14 @@ Preparing for interviews can be overwhelming — especially when you don’t kno
 
 ---
 
-## 🧠 Target Audience
+##  Target Audience
 - Tech students and recent graduates.  
 - Entry-level professionals seeking career readiness validation.  
 - Educational and career-support institutions.
 
 ---
 
-## 🧩 System Architecture
+##  System Architecture
 **Tech Stack**  
 - **Frontend:** React + Visual Studio Code  
 - **Backend:** Django REST Framework  
@@ -84,7 +84,7 @@ Preparing for interviews can be overwhelming — especially when you don’t kno
 
 ---
 
-## 🔄 Core Workflow
+##  Core Workflow
 1. **Upload CV** → User uploads PDF/Word resume.  
 2. **AI Skill Extraction** → Groq API detects skills.  
 3. **Quiz Generation** → AI creates questions per skill.  
@@ -98,7 +98,7 @@ Preparing for interviews can be overwhelming — especially when you don’t kno
 
 ---
 
-## 🧪 Testing & Quality Assurance
+##  Testing & Quality Assurance
 - **Unit Tests:** Validated Django models and endpoints.  
 - **Integration Tests:** Verified Django ↔ Groq ↔ React connectivity.  
 - **Manual Testing:** Postman used for API validation and error handling.  
@@ -106,7 +106,7 @@ Preparing for interviews can be overwhelming — especially when you don’t kno
 
 ---
 
-## ⚙️ Development Workflow
+##  Development Workflow
 | Step | Focus | Outcome |
 |------|--------|----------|
 | 1 | Backend Setup | Django API with tested endpoints |
@@ -118,7 +118,7 @@ Preparing for interviews can be overwhelming — especially when you don’t kno
 
 ---
 
-## 💡 Technical Highlights
+##  Technical Highlights
 - **Groq API:** NLP skill extraction and quiz generation.  
 - **Django REST:** Secure and scalable API architecture.  
 - **React Frontend:** Responsive and intuitive user interface.  
@@ -129,7 +129,7 @@ Preparing for interviews can be overwhelming — especially when you don’t kno
 
 ---
 
-## 🚧 Challenges & Solutions
+##  Challenges & Solutions
 | Challenge | Resolution |
 |------------|-------------|
 | AI output inconsistency | Improved prompt engineering and data filtering |
@@ -139,7 +139,7 @@ Preparing for interviews can be overwhelming — especially when you don’t kno
 
 ---
 
-## 🔮 Future Enhancements
+##  Future Enhancements
 - **RAG Integration:** Add Retrieval-Augmented Generation for context-aware feedback.  
 - **Recruiter Dashboard:** Employer-candidate matching system.  
 - **Free Trial Mode:** Two free AI analyses per user.  
@@ -147,7 +147,7 @@ Preparing for interviews can be overwhelming — especially when you don’t kno
 
 ---
 
-## 🧭 Lessons Learned
+##  Lessons Learned
 - Prompt engineering directly impacts AI accuracy.  
 - Early API architecture simplifies integration.  
 - Clear team roles and task ownership boost efficiency.  
@@ -155,7 +155,7 @@ Preparing for interviews can be overwhelming — especially when you don’t kno
 
 ---
 
-## 🏆 Results
+##  Results
 - **AI Accuracy:** ≈ 90 % skill extraction success.  
 - **Stable API:** 100 % uptime during testing.  
 - **UI Performance:** 98 % responsiveness on desktop.  
@@ -163,13 +163,13 @@ Preparing for interviews can be overwhelming — especially when you don’t kno
 
 ---
 
-## 📚 License
+##  License
 Developed for **Holberton School Saudi Arabia** — Cohort 1 Portfolio Project.  
 For educational and demonstration purposes only.
 
 ---
 
-## 💬 Acknowledgments
+##  Acknowledgments
 Special thanks to Holberton Saudi Arabia mentors and the Falcon team for their continuous support, guidance, and inspiration throughout the development journey.
 
 ---
