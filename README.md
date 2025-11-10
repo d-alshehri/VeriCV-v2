@@ -9,32 +9,52 @@
 
 ---
 
-## 📘 Overview
-**VeriCV** is an AI-powered web platform that helps job seekers and recent graduates in the tech field evaluate their job readiness.  
-It analyzes uploaded resumes, identifies both technical and soft skills, and automatically generates tailored assessments.  
-Users receive instant feedback reports highlighting strengths, weaknesses, and personalized recommendations.
+<div align="center">
+
+<img src="./assets/logo.png" width="140" alt="VeriCV Logo" />
+
+#  VeriCV — Smarter Interview Preparation with AI
+
+**Personalized, AI-generated quizzes built from your CV.**  
+Your smart companion for confident, data-driven interview practice.
+
+_Developed by Holberton School × Tuwaiq Academy_ 🇸🇦
 
 ---
 
-## 🧰 Tools & Technologies
-| Category | Tools Used |
-|-----------|-------------|
-| **Frontend** | React, Visual Studio Code |
-| **Backend** | Django REST Framework |
-| **Database** | PostgreSQL + Supabase (Auth & Storage) |
-| **AI Integration** | Groq API (NLP for skill extraction and quiz generation) |
-| **Project Management** | Monday.com |
-| **Documentation** | Obsidian |
-| **Testing & Debugging** | Postman |
+![Backend](https://img.shields.io/badge/Backend-Django-092E20?style=for-the-badge&logo=django)
+![Frontend](https://img.shields.io/badge/Frontend-React-61DAFB?style=for-the-badge&logo=react)
+![AI](https://img.shields.io/badge/AI-Groq%20%7C%20OpenRouter-F7941E?style=for-the-badge&logo=openai)
+![Design](https://img.shields.io/badge/Design-Lovable-FF69B4?style=for-the-badge&logo=figma)
+![Docs](https://img.shields.io/badge/Planning-Obsidian-8A2BE2?style=for-the-badge&logo=obsidian)
+
+</div>
 
 ---
+
+###  Overview
+**VeriCV** is an AI-powered platform that transforms a user’s resume into an **interactive interview experience**.  
+By analyzing skills, technologies, and experience, it automatically generates customized multiple-choice questions to help candidates prepare for real interviews with confidence.
+
+---
+
+###  Why We Built It
+Preparing for interviews can be overwhelming — especially when you don’t know what topics to focus on.  
+**VeriCV bridges this gap** by using AI to:
+- Understand your professional strengths and learning areas.  
+- Create questions relevant to your own background.  
+- Give you instant feedback, scores, and improvement tips.  
+- Track your progress over time through a visual history dashboard.
+
+---
+
 
 ## 🚀 Key Features
-- **AI Resume Analysis:** Upload your CV (PDF/Word) to extract relevant skills automatically.  
+- **AI Resume Analysis:** Upload your CV (PDF) to extract relevant skills automatically.  
 - **Smart Quiz Generation:** Custom skill-based quizzes generated via Groq API.  
 - **Instant Feedback:** Personalized recommendations to strengthen weak areas.  
 - **Progress Dashboard:** Track test history and performance improvements.  
-- **Job–CV Matching (Prototype):** Compare CVs against job descriptions to evaluate compatibility.
+- **Job–CV Matching :** Compare CVs against job descriptions to evaluate compatibility.
 
 ---
 
