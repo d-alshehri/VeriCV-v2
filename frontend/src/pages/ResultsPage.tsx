@@ -151,7 +151,7 @@ export default function ResultsPage() {
         skillsAnalyzed[s] = 0;
       }
     }
-    const position = (state?.position || state?.jobTitle || state?.title || "Resume Assessment") as string;
+    const position = (state?.position || state?.jobTitle || state?.title || "CV Assessment") as string;
 
     (async () => {
       try {

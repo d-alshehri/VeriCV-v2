@@ -238,12 +238,12 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <p className="text-muted-foreground">
-                Upload a resume to generate insights and track progress over time.
+                Upload a CV to generate insights and track progress over time.
               </p>
               <div className="flex gap-2">
                 <Button asChild variant="hero">
                   <Link to="/upload">
-                    <FileText className="w-4 h-4 mr-2" /> Upload Resume
+                    <FileText className="w-4 h-4 mr-2" /> Upload CV
                   </Link>
                 </Button>
               </div>

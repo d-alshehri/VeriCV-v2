@@ -160,7 +160,7 @@ export default function UploadPage() {
     <div className="min-h-screen bg-gradient-hero py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">Upload Your Resume</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Upload Your CV</h1>
           <p className="text-lg text-muted-foreground">
             Let our AI analyze your skills and create a personalized assessment
           </p>
@@ -179,7 +179,7 @@ export default function UploadPage() {
                 onDrop={handleDrop}
               >
                 <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-xl font-semibold mb-2">Drag & drop your resume here</h3>
+                <h3 className="text-xl font-semibold mb-2">Drag & drop your CV here</h3>
                 <p className="text-muted-foreground mb-6">or click to browse files</p>
 
                 {/* Hidden input triggered via ref click */}
@@ -197,7 +197,7 @@ export default function UploadPage() {
                 <div className="inline-flex">
                   <Button variant="hero" size="lg" className="gap-2" onClick={openFileDialog} disabled={state === "uploading"}>
                     <Upload className="w-4 h-4" />
-                    {state === "uploading" ? "Uploading…" : "Select Resume"}
+                    {state === "uploading" ? "Uploading…" : "Select CV"}
                   </Button>
                 </div>
 
@@ -221,7 +221,7 @@ export default function UploadPage() {
                     disabled={!uploadedFile || state === "uploading"}
                   >
                     <ArrowRight className="w-4 h-4" />
-                    {state === "uploading" ? "Uploading…" : "Upload resume"}
+                    {state === "uploading" ? "Uploading…" : "Upload CV"}
                   </Button>
                 </div>
 
