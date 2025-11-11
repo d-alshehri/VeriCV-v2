@@ -58,18 +58,21 @@ Analyze the following resume content carefully:
 ---
 {cv_text}
 ---
-Extract all *technical* and *soft* skills mentioned or implied.
-For each extracted skill, generate **3 multiple-choice questions (MCQs)**:
-1 easy question
-1 medium question
-1 difficult question
+Extract all *technical* and *soft* skills mentioned or implied, then rank them by importance and relevance.
+
+Generate a total of **up to 25 MCQs maximum**, focusing on the most important skills.
+Allocate 1–3 questions per skill depending on importance.
+Vary difficulty across easy, medium, and hard.
+Never exceed 25 questions total.
+
 Each question must include:
 "question": the question text
 "options": a list of 4 possible answers
-"correct_index": integer 0–3 (index of correct option)
+"correct_index": integer 0–3
 "skill": the specific skill being tested
 "difficulty": "easy", "medium", or "hard"
-"category": "technical" or "soft" (based on skill type)
+"category": "technical" or "soft"
+
 Output format example:
 [
   {{
@@ -101,19 +104,24 @@ Return ONLY this JSON array — no markdown, no extra text.
             content = match.group(1).strip()
 
         try:
-            return json.loads(content)
+            parsed = json.loads(content)
+            if isinstance(parsed, list) and len(parsed) > 25:
+                parsed = parsed[:25]
+            return parsed
         except json.JSONDecodeError:
             logger.warning("JSON parsing failed. Attempting cleanup...")
             cleaned = content.strip().replace("```json", "").replace("```", "")
             try:
-                return json.loads(cleaned)
+                parsed = json.loads(cleaned)
+                if isinstance(parsed, list) and len(parsed) > 25:
+                    parsed = parsed[:25]
+                return parsed
             except Exception:
                 logger.error(f"Invalid JSON after cleanup: {cleaned[:500]}")
                 return []
     else:
         logger.error(f"Groq API Error ({response.status_code}): {response.text}")
         return []
-
 
 # --- Generate Feedback ---
 def generate_feedback_from_ai(wrong_answers, percent):
