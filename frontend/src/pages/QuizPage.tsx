@@ -16,7 +16,6 @@ type Question = {
   skill?: string;
   topic?: string;
   category?: "technical" | "soft" | string;
-  difficulty?: "easy" | "medium" | "hard" | string;
 };
 
 type QuizState = "generating" | "ready" | "submitting" | "completed" | "error";
@@ -71,7 +70,7 @@ export default function QuizPage() {
       const text = q.question ?? q.prompt ?? q.text ?? String(q);
       // Prefer backend-provided fields; otherwise infer from text
       const skill = q.skill ?? q.topic ?? inferSkillFromText(text);
-      const category = q.category ?? inferCategoryFromSkill(skill);\n      const difficulty = (q as any).difficulty ?? undefined;
+      const category = q.category ?? inferCategoryFromSkill(skill);
       // Accept correctAnswer or correct_index from backend
       const correctAnswer =
         typeof q.correctAnswer === "number"
@@ -97,7 +96,7 @@ export default function QuizPage() {
       try {
         if (cvId) {
           const data = await aiGenerateFromCVId(cvId);
-          const qs = pickTopQuestions(normalize(data), 25);
+          const qs = normalize(data);
           if (!qs.length) throw new Error("No questions were generated. Please try again.");
           if (mounted) {
             setQuestions(qs);
@@ -221,7 +220,7 @@ export default function QuizPage() {
     setQuestions([]);
     try {
       const data = await aiGenerateFromFileSmart(pdfFile);
-      const qs = pickTopQuestions(normalize(data), 25);
+      const qs = normalize(data);
       if (!qs.length) throw new Error("No questions were generated from the PDF.");
       setQuestions(qs);
       setCurrent(0);

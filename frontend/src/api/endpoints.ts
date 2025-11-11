@@ -69,23 +69,12 @@ export async function uploadCV(file: File, title = "My CV") {
     throw new Error("Please choose a PDF file.");
   }
 
-  // Attempt A: custom action /api/cv/upload/ with {file}
-  try {
-    const f1 = new FormData();
-    f1.append("file", file, name);
-    const { data } = await api.post("cv/upload/", f1);
-    return data; // { cv_id, filename, ... }
-  } catch (err: any) {
-    const st = err?.response?.status;
-    if (st !== 404 && st !== 405) throw err;
-  }
-
-  // Attempt B: standard ModelViewSet create /api/cv/ with {title, file}
-  const f2 = new FormData();
-  f2.append("title", title);
-  f2.append("file", file, name);
-  const { data } = await api.post("cv/", f2);
-  return data; // often { id, title, file, ... }
+  // Standard create endpoint /api/cv/ with {title, file}
+  const form = new FormData();
+  form.append("title", title);
+  form.append("file", file, name);
+  const { data } = await api.post("cv/", form);
+  return data; // { id, title, file, ... }
 }
 
 /* =====================
