@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
+import {
   FileText,
   Calendar,
   TrendingUp,
@@ -12,7 +12,7 @@ import {
   Star,
   AlertCircle,
   Activity,
-  RefreshCcw
+  RefreshCcw,
 } from "lucide-react";
 import { getHistorySummary, getHistoryList, type Assessment, type HistorySummary } from "@/api/endpoints";
 
@@ -85,60 +85,6 @@ export default function DashboardPage() {
     const arr = Array.isArray(listRaw) ? listRaw : [];
     return arr.map(normalizeAssessment);
   }, [listRaw]);
-
-  // Enrich assessments with locally cached Job Match details (no backend changes)
-  type Enriched = Assessment & {
-    kind: "job_match" | "quiz";
-    missing_keywords?: string[];
-    summary?: string;
-  };
-
-  function loadJobMatchCache(): Array<{
-    position: string;
-    match_score: number;
-    missing_keywords: string[];
-    summary: string;
-    timestamp: number;
-  }> {
-    try {
-      const raw = localStorage.getItem("job_match_cache");
-      const arr = raw ? JSON.parse(raw) : [];
-      if (Array.isArray(arr)) return arr;
-    } catch {}
-    return [];
-  }
-
-  const enriched: Enriched[] = useMemo(() => {
-    const cache = loadJobMatchCache();
-    if (!assessments.length) return [] as Enriched[];
-    if (!cache.length) return assessments.map((a) => ({ ...a, kind: "quiz" as const }));
-
-    return assessments.map((a) => {
-      const aDate = a.date ? new Date(a.date).getTime() : null;
-      const aScore = typeof a.score === "number" ? a.score : null;
-      const aPos = (a.title ?? "").toString().toLowerCase().trim();
-
-      const match = cache.find((c) => {
-        const posOk = (c.position ?? "").toString().toLowerCase().trim() === aPos && !!aPos;
-        if (!posOk) return false;
-        if (aDate == null) return false;
-        const dt = Math.abs(c.timestamp - aDate);
-        if (dt > 5 * 60 * 1000) return false; // within 5 minutes
-        if (aScore == null) return true;
-        return Math.abs(c.match_score - aScore) <= 2; // within 2%
-      });
-
-      if (match) {
-        return {
-          ...a,
-          kind: "job_match" as const,
-          summary: match.summary,
-          missing_keywords: Array.isArray(match.missing_keywords) ? match.missing_keywords : undefined,
-        };
-      }
-      return { ...a, kind: "quiz" as const };
-    });
-  }, [assessments]);
 
   const totalAssessments = useMemo(() => {
     const total = (summaryRaw?.total ?? summaryRaw?.total_assessments ?? (summaryRaw as any)?.assessments) as number | undefined;
@@ -218,7 +164,6 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
             <p className="text-muted-foreground">Track your assessments and skill growth</p>
           </div>
-          {/* Actions removed per request */}
         </div>
 
         {/* KPI Cards */}
@@ -318,16 +263,12 @@ export default function DashboardPage() {
                       <th className="py-2 pr-3 font-medium">Position</th>
                       <th className="py-2 pr-3 font-medium">Score</th>
                       <th className="py-2 pr-3 font-medium">Top Skills</th>
-                      <th className="py-2 pr-3 font-medium">Type</th>
-                      <th className="py-2 pr-3 font-medium">Missing Keywords</th>
-                      <th className="py-2 pr-3 font-medium">Summary</th>
                       <th className="py-2 pr-3 font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {enriched.slice(0, 10).map((a, idx) => {
+                    {assessments.slice(0, 10).map((a, idx) => {
                       const date = a.date ? new Date(a.date) : null;
-                      const isJob = (a as any).kind === "job_match";
                       const score = typeof a.score === "number" ? `${a.score}%` : "—";
                       const skills = a.skills?.slice?.(0, 4) ?? [];
                       return (
@@ -352,34 +293,6 @@ export default function DashboardPage() {
                             </div>
                           </td>
                           <td className="py-2 pr-3">
-                            <Badge variant={isJob ? "default" : "outline"} className="text-xs">
-                              {isJob ? "Job Match" : "Quiz"}
-                            </Badge>
-                          </td>
-                          <td className="py-2 pr-3">
-                            {isJob && Array.isArray((a as any).missing_keywords) && (a as any).missing_keywords.length > 0 ? (
-                              <div className="flex flex-wrap gap-1 max-w-[36ch] truncate">
-                                {(a as any).missing_keywords.slice(0, 4).map((s: string) => (
-                                  <Badge key={s} variant="outline" className="text-xs">
-                                    {s}
-                                  </Badge>
-                                ))}
-                                {(a as any).missing_keywords.length > 4 && (
-                                  <Badge variant="outline" className="text-xs">+{(a as any).missing_keywords.length - 4} more</Badge>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </td>
-                          <td className="py-2 pr-3 max-w-[40ch] truncate">
-                            {isJob && (a as any).summary ? (
-                              <span className="text-foreground/90">{(a as any).summary}</span>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                          </td>
-                          <td className="py-2 pr-3">
                             <Button asChild size="sm" variant="outline">
                               <Link to="/results">View</Link>
                             </Button>
@@ -397,3 +310,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
