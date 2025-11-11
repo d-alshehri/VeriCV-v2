@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import api from "@/api"; // Axios instance
+// Use the same axios instance as the dashboard/endpoints
+import api from "@/api/http";
 import { isAuthenticated } from "@/utils/auth";
 // Type definition for context
 type AuthContextType = {
@@ -20,9 +21,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // :brain: :one: Login
   const login = async (username: string, password: string) => {
     try {
-      const res = await api.post("users/token/", { username, password });
-      localStorage.setItem("access", res.data.access);
-      localStorage.setItem("refresh", res.data.refresh);
+      // Align with backend core JWT endpoints
+      const res = await api.post("token/", { username, password });
+      localStorage.setItem("access", (res.data as any).access);
+      localStorage.setItem("refresh", (res.data as any).refresh);
       setAuthed(true);
     } catch (err: any) {
       console.error("Login failed:", err.response?.data || err.message);
@@ -44,8 +46,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
     try {
-      const res = await api.post("users/token/refresh/", { refresh });
-      localStorage.setItem("access", res.data.access);
+      // Align with backend core JWT refresh endpoint
+      const res = await api.post("token/refresh/", { refresh });
+      localStorage.setItem("access", (res.data as any).access);
       setAuthed(true);
     } catch (err: any) {
       console.warn("Token refresh failed:", err.response?.data || err.message);
