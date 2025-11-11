@@ -159,12 +159,21 @@ export async function submitAnswers(answers: any) {
 
 export async function getHistorySummary(): Promise<HistorySummary> {
   const { data } = await api.get("history/summary/");
-  return data;
+  return {
+    total: typeof data?.total === "number" ? data.total : (typeof data?.assessments === "number" ? data.assessments : 0),
+    total_assessments: typeof data?.total_assessments === "number" ? data.total_assessments : (typeof data?.total === "number" ? data.total : 0),
+    average_score: typeof data?.average_score === "number" ? data.average_score : (typeof data?.avg_score === "number" ? data.avg_score : null),
+    last_activity: typeof data?.last_activity === "string" ? data.last_activity : (typeof data?.last_assessment_date === "string" ? data.last_assessment_date : null),
+    last_assessment_date: typeof data?.last_assessment_date === "string" ? data.last_assessment_date : (typeof data?.last_activity === "string" ? data.last_activity : null),
+    top_skill: typeof data?.top_skill === "string" || data?.top_skill == null ? data?.top_skill ?? null : null,
+  };
 }
 
 export async function getHistoryList(): Promise<Assessment[]> {
   const { data } = await api.get("history/list/");
-  return data;
+  if (Array.isArray(data)) return data; // legacy shape
+  if (Array.isArray(data?.results)) return data.results; // wrapped shape
+  return [];
 }
 
 export async function addHistory(payload: {
