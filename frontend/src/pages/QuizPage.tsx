@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Clock, ArrowLeft, ArrowRight, Upload as UploadIcon } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { aiGenerateFromCVId, aiGenerateFromFileSmart, submitAnswers } from "@/api/endpoints";
 import { useNavigate } from "react-router-dom"; // ✅ import this
 
@@ -14,7 +15,8 @@ type Question = {
   correctAnswer?: number;   // optional; backend may not return it
   skill?: string;
   topic?: string;
-  category?: "technical" | "soft" | string; // ✅ include category
+  category?: "technical" | "soft" | string;
+  difficulty?: "easy" | "medium" | "hard" | string;
 };
 
 type QuizState = "generating" | "ready" | "submitting" | "completed" | "error";
@@ -27,7 +29,8 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState<Record<number, number | string>>({});
   const [timeLeft, setTimeLeft] = useState(10 * 60); // 10 minutes
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const nav = useNavigate(); // ✅ now available
+  const nav = useNavigate(); // now available
+  const { toast } = useToast();
 
   const cvId = useMemo(() => localStorage.getItem("last_cv_id"), []);
 
@@ -68,7 +71,7 @@ export default function QuizPage() {
       const text = q.question ?? q.prompt ?? q.text ?? String(q);
       // Prefer backend-provided fields; otherwise infer from text
       const skill = q.skill ?? q.topic ?? inferSkillFromText(text);
-      const category = q.category ?? inferCategoryFromSkill(skill);
+      const category = q.category ?? inferCategoryFromSkill(skill);\n      const difficulty = (q as any).difficulty ?? undefined;
       // Accept correctAnswer or correct_index from backend
       const correctAnswer =
         typeof q.correctAnswer === "number"
@@ -94,7 +97,7 @@ export default function QuizPage() {
       try {
         if (cvId) {
           const data = await aiGenerateFromCVId(cvId);
-          const qs = normalize(data);
+          const qs = pickTopQuestions(normalize(data), 25);
           if (!qs.length) throw new Error("No questions were generated. Please try again.");
           if (mounted) {
             setQuestions(qs);
@@ -105,8 +108,10 @@ export default function QuizPage() {
           setStatus("ready");
         }
       } catch (e: any) {
-        setError(e?.response?.data?.error || e?.message || "Failed to generate questions.");
-        setStatus("error");
+        const msg = e?.response?.data?.error || e?.message || 'Failed to generate questions.';
+        setError(msg);
+        try { toast({ title: 'Generation Error', description: msg, variant: 'destructive' }); } catch {}
+        setStatus('ready');
       }
     })();
     return () => {
@@ -216,15 +221,17 @@ export default function QuizPage() {
     setQuestions([]);
     try {
       const data = await aiGenerateFromFileSmart(pdfFile);
-      const qs = normalize(data);
+      const qs = pickTopQuestions(normalize(data), 25);
       if (!qs.length) throw new Error("No questions were generated from the PDF.");
       setQuestions(qs);
       setCurrent(0);
       setAnswers({});
       setStatus("ready");
     } catch (e: any) {
-      setError(e?.response?.data?.error || e?.message || "Generation failed.");
-      setStatus("error");
+      const msg2 = e?.response?.data?.error || e?.message || 'Generation failed.';
+      setError(msg2);
+      try { toast({ title: 'Generation Error', description: msg2, variant: 'destructive' }); } catch {}
+      setStatus('ready');
     }
   };
   /* ---------- UI ---------- */
@@ -397,3 +404,12 @@ export default function QuizPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
