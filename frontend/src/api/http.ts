@@ -1,9 +1,8 @@
 // src/api/http.ts
 import axios, { AxiosError, AxiosRequestConfig, AxiosRequestHeaders } from "axios";
 
-// Prefer environment base when provided (useful if not using the Vite proxy)
 const api = axios.create({
-  baseURL: (import.meta as any).env?.VITE_API_BASE_URL || "/api",
+  baseURL: "/api",
 });
 
 // Helpers for tokens

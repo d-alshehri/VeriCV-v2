@@ -2,8 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
-from django.db.models import Avg, Max, Count
+from django.db.models import Avg
 from .models import Assessment
 from .serializers import AssessmentSerializer
 
@@ -11,61 +10,34 @@ class AssessmentSummaryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        try:
-            qs = Assessment.objects.filter(user=request.user)
-            agg = qs.aggregate(
-                total=Count("id"),
-                average_score=Avg("average_score"),
-                last_assessment_date=Max("date_created"),
-            )
+        user = request.user
+        assessments = Assessment.objects.filter(user=user)
+        count = assessments.count()
+        avg_score = assessments.aggregate(Avg("average_score"))["average_score__avg"] or 0
+        last_activity = assessments.order_by("-date_created").first()
+        last_date = last_activity.date_created if last_activity else None
 
-            # Build a tolerant payload (never 500)
-            avg = agg.get("average_score")
-            last = agg.get("last_assessment_date")
+        all_skills = {}
+        for a in assessments:
+            for skill, score in (a.skills_analyzed or {}).items():
+                all_skills[skill] = max(all_skills.get(skill, 0), score)
+        top_skill = max(all_skills, key=all_skills.get) if all_skills else None
 
-            # Optional: compute a top skill safely
-            all_skills = {}
-            for a in qs:
-                for skill, score in (a.skills_analyzed or {}).items():
-                    all_skills[skill] = max(all_skills.get(skill, 0), score)
-            top_skill = max(all_skills, key=all_skills.get) if all_skills else None
-
-            payload = {
-                "total": agg.get("total") or 0,
-                "total_assessments": agg.get("total") or 0,
-                "average_score": float(avg) if avg is not None else None,
-                "last_assessment_date": last.isoformat() if last else None,
-                # Keep legacy fields for frontend compatibility
-                "last_activity": last.isoformat() if last else None,
-                "top_skill": top_skill,
-            }
-            return Response(payload, status=status.HTTP_200_OK)
-        except Exception:
-            return Response({
-                "total": 0,
-                "total_assessments": 0,
-                "average_score": None,
-                "last_assessment_date": None,
-                "last_activity": None,
-                "top_skill": None,
-            }, status=status.HTTP_200_OK)
+        return Response({
+            "assessments": count,
+            "average_score": round(avg_score, 1),
+            "top_skill": top_skill,
+            "last_activity": last_date,
+        })
 
 
 class AssessmentListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        try:
-            assessments = (
-                Assessment.objects
-                .filter(user=request.user)
-                .order_by("-date_created")
-            )
-            serializer = AssessmentSerializer(assessments, many=True)
-            return Response({"results": serializer.data}, status=status.HTTP_200_OK)
-        except Exception:
-            # Never 500 the dashboard; fail safe with empty list
-            return Response({"results": []}, status=status.HTTP_200_OK)
+        assessments = Assessment.objects.filter(user=request.user).order_by("-date_created")
+        serializer = AssessmentSerializer(assessments, many=True)
+        return Response(serializer.data)
     
 from rest_framework import status
 
