@@ -1,6 +1,10 @@
 # VeriCV 
 **AI Powered Resume Intelligence Platform**
 
+## 🌐 Live Project  
+[🔗 Explore VeriCV on Bind.link](https://bind.link/@vericv)
+
+
 ## https://bind.link/@vericv
 
 ###  Holberton School Saudi Arabia  
