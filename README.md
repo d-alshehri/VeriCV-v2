@@ -1,8 +1,9 @@
 # VeriCV 
 **AI Powered Resume Intelligence Platform**
 
-## 🌐 Live Project  
-[🔗 Explore VeriCV on Bind.link](https://bind.link/@vericv)
+
+[🔗 Explore VeriCV on Bind.link]
+(https://bind.link/@vericv)
 
 🌐 **Live Website:** [https://vericv.app](https://vericv.app)
 
