@@ -10,6 +10,7 @@ import LandingPage from "./pages/LandingPage";
 import UploadPage from "./pages/UploadPage";
 import QuizPage from "./pages/QuizPage";
 import ResultsPage from "./pages/ResultsPage";
+import AssessmentResultPage from "@/pages/AssessmentResultPage";
 import DashboardPage from "@/pages/DashboardPage";
 import AboutPage from "./pages/AboutPage";
 import TeamPage from "./pages/TeamPage";
@@ -44,6 +45,7 @@ function App() {
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                 <Route path="/quiz" element={<ProtectedRoute><CvGateRoute><QuizPage /></CvGateRoute></ProtectedRoute>} />
                 <Route path="/results" element={<ProtectedRoute><ResultsPage /></ProtectedRoute>} />
+                <Route path="/assessments/:id" element={<ProtectedRoute><AssessmentResultPage /></ProtectedRoute>} />
                 <Route path="/matcher" element={<ProtectedRoute><JobMatchPage /></ProtectedRoute>} />
 
                 {/* Catch-all */}
