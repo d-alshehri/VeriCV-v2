@@ -270,7 +270,6 @@ export default function DashboardPage() {
                       <th className="py-2 pr-3 font-medium">Date</th>
                       <th className="py-2 pr-3 font-medium">Score</th>
                       <th className="py-2 pr-3 font-medium">Top Skills</th>
-                      <th className="py-2 pr-3 font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -298,13 +297,7 @@ export default function DashboardPage() {
                               )}
                             </div>
                           </td>
-                          <td className="py-2 pr-3">
-                            <Button asChild size="sm" variant="outline">
-                              <Link to={`/assessments/${a.id}`}>
-                                View
-                              </Link>
-                            </Button>
-                          </td>
+                          
                         </tr>
                       );
                     })}
