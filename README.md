@@ -130,8 +130,8 @@ Preparing for interviews can be stressful and unpredictable — especially for n
 | **2. Database Integration** | PostgreSQL | 
 | **3. Frontend Development** | React UI & UX implementation |
 | **4. AI Integration** | Groq for parsing & quiz logic |
-| **5. Testing & QA** | Postman & peer testing | Verified user flow |
-| **6. Documentation & Planning** | Obsidian + Monday.com | Structured and transparent workflow |
+| **5. Testing & QA** | Postman & peer testing | 
+| **6. Documentation & Planning** | Obsidian + Monday.com |
 
 ---
 
