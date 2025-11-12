@@ -1,5 +1,5 @@
 # VeriCV   
-**AI-Powered Resume Intelligence Platform**
+**AI Powered Resume Intelligence Platform**
 
 ## https://bind.link/@vericv
 
@@ -17,7 +17,8 @@
 
 <img width="302" height="297" alt="Image" src="https://github.com/user-attachments/assets/2ccbd793-084e-4900-bd6f-f581892452f8" />
 
-#  VeriCV — Smarter Interview Preparation with AI  
+#  VeriCV  
+# # Smarter Interview Preparation with AI  
 
 **Transform your CV into personalized, AI-driven interview practice.**  
 Empowering graduates and job seekers with data-driven feedback and confidence.
