@@ -91,7 +91,7 @@ Preparing for interviews can be stressful and unpredictable — especially for n
 |-------|-------------|
 | **Frontend** | React, Visual Studio Code |
 | **Backend** | Django REST Framework |
-| **Database** | PostgreSQL + Supabase |
+| **Database** | PostgreSQL |
 | **AI Engine** | Groq API (Natural Language Processing) |
 | **Documentation** | Google docs |
 | **Project Management** | Monday.com |
