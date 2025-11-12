@@ -1,5 +1,5 @@
 # VeriCV 
-**AI Powered Resume Intelligence Platform**
+## **AI Powered Resume Intelligence Platform**
 ###  Holberton School Saudi Arabia  
 #### Cohort 1 (Feb – Nov 2025)
 
