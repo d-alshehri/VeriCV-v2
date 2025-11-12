@@ -300,14 +300,7 @@ export default function DashboardPage() {
                           </td>
                           <td className="py-2 pr-3">
                             <Button asChild size="sm" variant="outline">
-                              <Link
-                                to="/results"
-                                state={{
-                                  id: a.id,
-                                  overallScore: typeof a?.score === "number" ? a.score : undefined,
-                                  skills: Array.isArray(a?.skills) ? a.skills : [],
-                                }}
-                              >
+                              <Link to={`/assessments/${a.id}`}>
                                 View
                               </Link>
                             </Button>
