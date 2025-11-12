@@ -12,9 +12,6 @@
 - Leen Mohammed Alsaleh
 - Haneen Nasser Aldawood 
 - Danah Khaled Alshehri
-[10674@holbertonstudents.com](mailto:10674@holbertonstudents.com)
-
-
 
 ---
 
