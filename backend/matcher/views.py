@@ -24,16 +24,18 @@ class JobMatcherView(APIView):
         # Step 2: AI Analysis
         ai_result = analyze_job_match(cv_text, job_description, position)
 
-        # Step 3: Save to assessment history
+        # Step 3: Save to assessment history as a 'match' record (excluded from quiz dashboard)
         Assessment.objects.create(
             user=request.user,
+            kind="match",
             position=position,
-            average_score=ai_result.get("match_score", 0),
+            average_score=ai_result.get("match_score", 0) or 0,
+            # Keep original matcher payload shape; quiz UI won't consume these entries
             skills_analyzed={
-                 "missing_keywords": ai_result.get("missing_keywords", []),
+                "missing_keywords": ai_result.get("missing_keywords", []),
                 "summary": ai_result.get("summary", ""),
-    }
-)
+            },
+        )
 
         # Step 4: Return result
         return Response(ai_result, status=status.HTTP_200_OK)

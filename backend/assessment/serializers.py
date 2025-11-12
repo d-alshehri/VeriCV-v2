@@ -20,4 +20,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
         return obj.top_skills()
 
     def get_skills_analyzed_count(self, obj):
-        return len(obj.skills_analyzed.keys()) if obj.skills_analyzed else 0
+        if not isinstance(obj.skills_analyzed, dict):
+            return 0
+        # Count only keys with numeric values to avoid matcher payloads breaking assumptions
+        return sum(1 for v in obj.skills_analyzed.values() if isinstance(v, (int, float)))

@@ -11,7 +11,7 @@ class AssessmentSummaryView(APIView):
 
     def get(self, request):
         user = request.user
-        assessments = Assessment.objects.filter(user=user)
+        assessments = Assessment.objects.filter(user=user, kind="quiz")
         count = assessments.count()
         avg_score = assessments.aggregate(Avg("average_score"))["average_score__avg"] or 0
         last_activity = assessments.order_by("-date_created").first()
@@ -19,8 +19,11 @@ class AssessmentSummaryView(APIView):
 
         all_skills = {}
         for a in assessments:
-            for skill, score in (a.skills_analyzed or {}).items():
-                all_skills[skill] = max(all_skills.get(skill, 0), score)
+            if not isinstance(a.skills_analyzed, dict):
+                continue
+            for skill, score in a.skills_analyzed.items():
+                if isinstance(score, (int, float)):
+                    all_skills[skill] = max(all_skills.get(skill, 0), float(score))
         top_skill = max(all_skills, key=all_skills.get) if all_skills else None
 
         return Response({
@@ -35,7 +38,7 @@ class AssessmentListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        assessments = Assessment.objects.filter(user=request.user).order_by("-date_created")
+        assessments = Assessment.objects.filter(user=request.user, kind="quiz").order_by("-date_created")
         serializer = AssessmentSerializer(assessments, many=True)
         return Response(serializer.data)
     
@@ -63,6 +66,7 @@ class AssessmentCreateView(APIView):
         # Create the record
         assessment = Assessment.objects.create(
             user=user,
+            kind="quiz",
             position=position,
             average_score=average_score,
             skills_analyzed=skills_analyzed

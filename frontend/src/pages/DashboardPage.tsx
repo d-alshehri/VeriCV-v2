@@ -83,7 +83,15 @@ export default function DashboardPage() {
 
   const assessments = useMemo(() => {
     const arr = Array.isArray(listRaw) ? listRaw : [];
-    return arr.map(normalizeAssessment);
+    const normalized = arr.map(normalizeAssessment);
+    // Safety net: only include quiz-like entries
+    return normalized.filter((a: any) => {
+      if (a?.kind && a.kind !== "quiz") return false;
+      const hasScore = typeof a?.score === "number" && !Number.isNaN(a.score);
+      const hasDate = !!a?.date;
+      const hasTitle = typeof a?.title === "string" && a.title.trim().length > 0;
+      return hasScore || (hasDate && hasTitle);
+    });
   }, [listRaw]);
 
   const totalAssessments = useMemo(() => {
@@ -268,9 +276,9 @@ export default function DashboardPage() {
                   </thead>
                   <tbody>
                     {assessments.slice(0, 10).map((a, idx) => {
-                      const date = a.date ? new Date(a.date) : null;
-                      const score = typeof a.score === "number" ? `${a.score}%` : "—";
-                      const skills = a.skills?.slice?.(0, 4) ?? [];
+                      const date = a?.date ? new Date(a.date) : null;
+                      const score = typeof a?.score === "number" && !Number.isNaN(a.score) ? `${a.score}%` : "0%";
+                      const skills = Array.isArray(a?.skills) ? a.skills.slice(0, 4) : [];
                       return (
                         <tr key={String(a.id ?? idx)} className="border-t">
                           <td className="py-2 pr-3 whitespace-nowrap">
@@ -287,7 +295,7 @@ export default function DashboardPage() {
                                   {s}
                                 </Badge>
                               ))}
-                              {typeof a.skills?.length === "number" && a.skills.length > 4 && (
+                              {Array.isArray(a?.skills) && a.skills.length > 4 && (
                                 <Badge variant="outline" className="text-xs">+{a.skills.length - 4} more</Badge>
                               )}
                             </div>
@@ -310,4 +318,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
