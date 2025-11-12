@@ -134,10 +134,11 @@ export default function ResultsPage() {
   const strengths = (summarized.skills || []).filter((s) => s.score >= 80);
   const improvements = (summarized.skills || []).filter((s) => s.score < 70);
 
-  // Persist the assessment to history once per visit
+  // Persist the assessment to history only when explicitly requested
   const persistedRef = useRef(false);
   useEffect(() => {
     if (persistedRef.current) return;
+    if (state?.persistHistory !== true) return; // view-only visits should not re-add history
     const overall = summarized?.overallScore;
     const skillsArr: any[] = Array.isArray(summarized?.skills) ? summarized.skills : [];
     if (typeof overall !== "number" || !skillsArr.length) return;

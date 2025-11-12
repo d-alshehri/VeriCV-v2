@@ -187,6 +187,7 @@ export default function QuizPage() {
       const finalSkills = Array.isArray(data?.skills) ? data.skills : skills;
       nav("/results", {
         state: {
+          persistHistory: true,
           overallScore: finalOverall,
           skills: finalSkills,
           answers,
@@ -266,6 +267,7 @@ export default function QuizPage() {
                 onClick={() =>
                   nav("/results", {
                     state: {
+                      persistHistory: true,
                       overallScore: localStorage.getItem("ai_score")
                         ? Number(localStorage.getItem("ai_score"))
                         : undefined,
