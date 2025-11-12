@@ -32,6 +32,10 @@ Empowering graduates and job seekers with data-driven feedback and confidence.
 
 _Developed by Holberton School × Tuwaiq Academy_ 🇸🇦
 
+<img width="4096" height="1659" alt="Image" src="https://github.com/user-attachments/assets/9df1775a-3b99-476f-8a2f-12268f7bcd5b" />
+
+
+
 ---
 
 ![Backend](https://img.shields.io/badge/Backend-Django-092E20?style=for-the-badge&logo=django)
