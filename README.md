@@ -1,11 +1,17 @@
-# VeriCV   
-**AI-Powered Resume Intelligence Platform**
+# VeriCV 
+**AI Powered Resume Intelligence Platform**
 
-###  Holberton School Saudi Arabia — Cohort 1 (Feb – Nov 2025)
+## https://bind.link/@vericv
+
+###  Holberton School Saudi Arabia  
+#### Cohort 1 (Feb – Nov 2025)
 **Team Members**  
-- Leen Mohammed Alsaleh — [10691@holbertonstudents.com](mailto:10691@holbertonstudents.com)  
-- Haneen Nasser Aldawood — [10684@holbertonstudents.com](mailto:10684@holbertonstudents.com)  
-- Danah Khaled Alshehri — [10674@holbertonstudents.com](mailto:10674@holbertonstudents.com)
+- Leen Mohammed Alsaleh
+[10691@holbertonstudents.com](mailto:10691@holbertonstudents.com)  
+- Haneen Nasser Aldawood
+[10684@holbertonstudents.com](mailto:10684@holbertonstudents.com)  
+- Danah Khaled Alshehri
+[10674@holbertonstudents.com](mailto:10674@holbertonstudents.com)
 
 ---
 
@@ -13,7 +19,8 @@
 
 <img width="302" height="297" alt="Image" src="https://github.com/user-attachments/assets/2ccbd793-084e-4900-bd6f-f581892452f8" />
 
-#  VeriCV — Smarter Interview Preparation with AI  
+#  VeriCV  
+## Smarter Interview Preparation with AI  
 
 **Transform your CV into personalized, AI-driven interview practice.**  
 Empowering graduates and job seekers with data-driven feedback and confidence.
@@ -58,7 +65,7 @@ Preparing for interviews can be stressful and unpredictable — especially for n
 - **Smart Quiz Generation:** Generate custom assessments using Groq AI.  
 - **Instant Feedback:** Get performance scores and practical improvement tips.  
 - **Progress Dashboard:** Track test history and progress over time.  
-- **Job–CV Matching:** Evaluate how well your resume aligns with specific job descriptions.  
+- **Job CV Matching:** Evaluate how well your resume aligns with specific job descriptions.  
 
 ---
 
@@ -84,9 +91,9 @@ Preparing for interviews can be stressful and unpredictable — especially for n
 |-------|-------------|
 | **Frontend** | React, Visual Studio Code |
 | **Backend** | Django REST Framework |
-| **Database** | PostgreSQL + Supabase |
+| **Database** | PostgreSQL |
 | **AI Engine** | Groq API (Natural Language Processing) |
-| **Documentation** | Obsidian |
+| **Documentation** | Google docs |
 | **Project Management** | Monday.com |
 | **Testing & QA** | Postman |
 
@@ -148,7 +155,7 @@ Preparing for interviews can be stressful and unpredictable — especially for n
 - **RAG Integration:** Retrieval-Augmented Generation for deeper AI context understanding.  
 - **Recruiter Dashboard:** Match candidates directly with relevant roles.  
 - **Free Trial System:** Allow new users to test AI features twice before signup.  
-- **Multi-Language Support:** Enable Arabic and English CV parsing.  
+- **Multi Language Support:** Enable Arabic and English CV parsing.  
 
 ---
 
