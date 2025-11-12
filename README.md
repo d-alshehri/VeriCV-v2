@@ -127,9 +127,9 @@ Preparing for interviews can be stressful and unpredictable — especially for n
 | Phase | Focus | Outcome |
 |--------|--------|----------|
 | **1. Backend Setup** | Django REST API development | Stable, modular API |
-| **2. Database Integration** | PostgreSQL + Supabase setup | Reliable data persistence |
+| **2. Database Integration** | PostgreSQL | Reliable data persistence |
 | **3. Frontend Development** | React UI & UX implementation | Interactive user experience |
-| **4. AI Integration** | Groq for parsing & quiz logic | Automated intelligence layer |
+| **4. AI Integration** | Groq for parsing & quiz logic |
 | **5. Testing & QA** | Postman & peer testing | Verified user flow |
 | **6. Documentation & Planning** | Obsidian + Monday.com | Structured and transparent workflow |
 
@@ -139,7 +139,7 @@ Preparing for interviews can be stressful and unpredictable — especially for n
 - **Groq API** → Powers NLP-based skill extraction and quiz creation.  
 - **Django REST** → Provides a secure and scalable backend architecture.  
 - **React Frontend** → Builds a responsive, user-friendly interface.  
-- **PostgreSQL** → Ensures structured data handling with Supabase as backup.  
+- **PostgreSQL** → Ensures structured data handling .  
 - **Postman & VS Code** → Core for testing and daily development.  
 - **Obsidian + Monday.com** → Centralized documentation and agile management.  
 
