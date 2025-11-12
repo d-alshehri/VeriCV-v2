@@ -124,8 +124,8 @@ Preparing for interviews can be stressful and unpredictable — especially for n
 
 ##  Development Workflow
 
-| Phase | Focus | Outcome |
-|--------|--------|----------|
+| Phase | Focus | 
+|--------|--------|
 | **1. Backend Setup** | Django REST API development |
 | **2. Database Integration** | PostgreSQL | 
 | **3. Frontend Development** | React UI & UX implementation |
