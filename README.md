@@ -1,8 +1,13 @@
 # VeriCV 
 **AI Powered Resume Intelligence Platform**
-
 ###  Holberton School Saudi Arabia  
 #### Cohort 1 (Feb – Nov 2025)
+
+
+[Explore VeriCV on Bind.link](https://bind.link/@vericv)
+
+**Live Website:** [https://vericv.app] 
+
 **Team Members**  
 - Leen Mohammed Alsaleh
 [10691@holbertonstudents.com](mailto:10691@holbertonstudents.com)  
@@ -11,13 +16,6 @@
 - Danah Khaled Alshehri
 [10674@holbertonstudents.com](mailto:10674@holbertonstudents.com)
 
-
-
-[Explore VeriCV on Bind.link]
-(https://bind.link/@vericv)
-
-**Live Website:**
-[https://vericv.app] 
 
 
 ---
