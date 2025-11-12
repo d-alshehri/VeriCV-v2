@@ -10,7 +10,6 @@
 
 **Team Members**  
 - Leen Mohammed Alsaleh
-[10691@holbertonstudents.com](mailto:10691@holbertonstudents.com)  
 - Haneen Nasser Aldawood
 [10684@holbertonstudents.com](mailto:10684@holbertonstudents.com)  
 - Danah Khaled Alshehri
