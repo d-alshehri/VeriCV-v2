@@ -4,8 +4,7 @@
 ## 🌐 Live Project  
 [🔗 Explore VeriCV on Bind.link](https://bind.link/@vericv)
 
-
-## https://bind.link/@vericv
+🌐 **Live Website:** [https://vericv.app](https://vericv.app)
 
 ###  Holberton School Saudi Arabia  
 #### Cohort 1 (Feb – Nov 2025)
