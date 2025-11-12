@@ -9,8 +9,6 @@
 - Haneen Nasser Aldawood — [10684@holbertonstudents.com](mailto:10684@holbertonstudents.com)  
 - Danah Khaled Alshehri — [10674@holbertonstudents.com](mailto:10674@holbertonstudents.com)
 
-
-
 ---
 
 <div align="center">
@@ -18,7 +16,7 @@
 <img width="302" height="297" alt="Image" src="https://github.com/user-attachments/assets/2ccbd793-084e-4900-bd6f-f581892452f8" />
 
 #  VeriCV  
-# # Smarter Interview Preparation with AI  
+## Smarter Interview Preparation with AI  
 
 **Transform your CV into personalized, AI-driven interview practice.**  
 Empowering graduates and job seekers with data-driven feedback and confidence.
