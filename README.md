@@ -61,7 +61,7 @@ Preparing for interviews can be stressful and unpredictable — especially for n
 - **Smart Quiz Generation:** Generate custom assessments using Groq AI.  
 - **Instant Feedback:** Get performance scores and practical improvement tips.  
 - **Progress Dashboard:** Track test history and progress over time.  
-- **Job–CV Matching:** Evaluate how well your resume aligns with specific job descriptions.  
+- **Job CV Matching:** Evaluate how well your resume aligns with specific job descriptions.  
 
 ---
 
@@ -151,7 +151,7 @@ Preparing for interviews can be stressful and unpredictable — especially for n
 - **RAG Integration:** Retrieval-Augmented Generation for deeper AI context understanding.  
 - **Recruiter Dashboard:** Match candidates directly with relevant roles.  
 - **Free Trial System:** Allow new users to test AI features twice before signup.  
-- **Multi-Language Support:** Enable Arabic and English CV parsing.  
+- **Multi Language Support:** Enable Arabic and English CV parsing.  
 
 ---
 
