@@ -11,22 +11,26 @@ import dj_database_url  # make sure it's installed
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables
+# Load environment variables (edit path if needed)
 load_dotenv("/home/VeriCV/backend/.env")
 
+# -----------------------------
 # Basic setup
+# -----------------------------
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key")
 DEBUG = os.getenv("DEBUG", "True") == "True"
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 
+# -----------------------------
 # Installed apps
+# -----------------------------
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "django.contrib.staticfiles",
+    "django.contrib.staticfiles",  # required for collectstatic
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
@@ -41,6 +45,9 @@ INSTALLED_APPS = [
     "healthcheck",
 ]
 
+# -----------------------------
+# Middleware
+# -----------------------------
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
@@ -72,7 +79,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
-# Local: SQLite | Server: PostgreSQL
+# -----------------------------
+# Database: SQLite (local) / PostgreSQL (server)
+# -----------------------------
 USE_SQLITE = os.getenv("USE_SQLITE", "1") == "1"
 
 if USE_SQLITE:
@@ -92,7 +101,10 @@ else:
                 conn_health_checks=True,
             )
         }
-        DATABASES["default"]["OPTIONS"] = {**DATABASES["default"].get("OPTIONS", {}), "sslmode": "require"}
+        DATABASES["default"]["OPTIONS"] = {
+            **DATABASES["default"].get("OPTIONS", {}),
+            "sslmode": "require"
+        }
     else:
         DATABASES = {
             "default": {
@@ -109,3 +121,58 @@ else:
         }
 
 print("Using database engine:", DATABASES["default"]["ENGINE"])
+
+# -----------------------------
+# Static & Media configuration
+# -----------------------------
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+# -----------------------------
+# REST Framework + JWT
+# -----------------------------
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.IsAuthenticated",
+    ),
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+# -----------------------------
+# CORS (frontend connection)
+# -----------------------------
+if DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "https://vericv.app",
+        "http://104.248.136.7",
+    ]
+
+# -----------------------------
+# Miscellaneous
+# -----------------------------
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
+USE_I18N = True
+USE_TZ = True
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# -----------------------------
+# AI Key
+# -----------------------------
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
