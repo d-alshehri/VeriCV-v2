@@ -74,3 +74,23 @@ class AssessmentCreateView(APIView):
 
         serializer = AssessmentSerializer(assessment)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class AssessmentDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk: int):
+        try:
+            a = Assessment.objects.get(id=pk, user=request.user, kind="quiz")
+        except Assessment.DoesNotExist:
+            return Response({"error": "Not found"}, status=404)
+
+        # Return full details including skills_analyzed so frontend can render past results
+        return Response({
+            "id": a.id,
+            "position": a.position,
+            "average_score": a.average_score,
+            "date_created": a.date_created,
+            "skills_analyzed": a.skills_analyzed or {},
+            "kind": getattr(a, "kind", "quiz"),
+        })

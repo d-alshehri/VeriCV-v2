@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect } from "react";
+import { useMemo, useRef, useEffect, useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import {
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { toast } from "@/components/ui/sonner";
-import { addHistory } from "@/api/endpoints";
+import { addHistory, getHistoryDetail } from "@/api/endpoints";
 
 console.log("ResultsPage loaded from:", import.meta.url);
 
@@ -25,6 +25,10 @@ export default function ResultsPage() {
   const state = location?.state || {};
   console.log("Router state on load:", state);
   const reportRef = useRef<HTMLDivElement>(null);
+  const [detail, setDetail] = useState<{
+    overall?: number;
+    skills?: Array<{ skill: string; score: number; category?: string }>;
+  } | null>(null);
 
   // ✅ Fallback: load from localStorage if state is empty
   if (!state?.overallScore && !state?.overall && !state?.skills) {
@@ -55,6 +59,10 @@ export default function ResultsPage() {
 
   // ----- Summarizer -----
   const summarized = useMemo(() => {
+    // Prefer fetched detail if available
+    if (detail && typeof detail.overall === "number" && Array.isArray(detail.skills) && detail.skills.length) {
+      return { overallScore: detail.overall, skills: detail.skills, recommendations: [] };
+    }
     // ✅ Prefer real data from QuizPage/backend
     if (
       state &&
@@ -129,8 +137,26 @@ export default function ResultsPage() {
         : Math.round(skills.reduce((acc, s) => acc + s.score, 0) / Math.max(1, skills.length));
 
     return { overallScore, skills, recommendations: [] };
-  }, [state]); // ✅ depend on state
+  }, [state, detail]); // ✅ depend on state
 
+  // Try to load full details when navigating from Dashboard with only an id
+  useEffect(() => {
+    const id = state?.id as number | string | undefined;
+    const hasScoredSkills = Array.isArray(state?.skills) && state.skills.some((s: any) => typeof s?.score === "number");
+    if (!id || hasScoredSkills) return;
+    (async () => {
+      try {
+        const data = await getHistoryDetail(id);
+        const skillsAnalyzed = (data as any)?.skills_analyzed || {};
+        const skills = Object.entries(skillsAnalyzed)
+          .filter(([, v]) => typeof v === "number")
+          .map(([skill, score]) => ({ skill, score: Math.round(Number(score)), category: "technical" }));
+        setDetail({ overall: Number((data as any)?.average_score) || 0, skills });
+      } catch {
+        /* ignore */
+      }
+    })();
+  }, [state]);
   const strengths = (summarized.skills || []).filter((s) => s.score >= 80);
   const improvements = (summarized.skills || []).filter((s) => s.score < 70);
 
@@ -428,3 +454,7 @@ export default function ResultsPage() {
     </div>
   );
 }
+
+
+
+

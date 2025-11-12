@@ -164,3 +164,15 @@ export async function addHistory(payload: {
   const { data } = await api.post("history/add/", payload);
   return data;
 }
+
+export async function getHistoryDetail(id: number | string): Promise<{
+  id: number;
+  position: string;
+  average_score: number;
+  date_created: string;
+  skills_analyzed: Record<string, number> | any;
+  kind?: string;
+}> {
+  const { data } = await api.get(`history/${id}/`);
+  return data;
+}

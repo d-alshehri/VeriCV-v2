@@ -226,7 +226,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">
-                    {lastActivity ? new Date(lastActivity).toLocaleDateString() : "—"}
+                    {lastActivity ? new Date(lastActivity).toLocaleDateString() : "N/A"}
                   </p>
                   <p className="text-sm text-muted-foreground">Last Activity</p>
                 </div>
@@ -268,7 +268,6 @@ export default function DashboardPage() {
                   <thead className="text-muted-foreground">
                     <tr className="text-left">
                       <th className="py-2 pr-3 font-medium">Date</th>
-                      <th className="py-2 pr-3 font-medium">Position</th>
                       <th className="py-2 pr-3 font-medium">Score</th>
                       <th className="py-2 pr-3 font-medium">Top Skills</th>
                       <th className="py-2 pr-3 font-medium">Action</th>
@@ -284,9 +283,8 @@ export default function DashboardPage() {
                           <td className="py-2 pr-3 whitespace-nowrap">
                             {date && !Number.isNaN(date.getTime())
                               ? date.toLocaleDateString()
-                              : "—"}
+                              : "N/A"}
                           </td>
-                          <td className="py-2 pr-3 max-w-[28ch] truncate">{a.title ?? "Assessment"}</td>
                           <td className="py-2 pr-3">{score}</td>
                           <td className="py-2 pr-3">
                             <div className="flex flex-wrap gap-1">
@@ -302,7 +300,16 @@ export default function DashboardPage() {
                           </td>
                           <td className="py-2 pr-3">
                             <Button asChild size="sm" variant="outline">
-                              <Link to="/results">View</Link>
+                              <Link
+                                to="/results"
+                                state={{
+                                  id: a.id,
+                                  overallScore: typeof a?.score === "number" ? a.score : undefined,
+                                  skills: Array.isArray(a?.skills) ? a.skills : [],
+                                }}
+                              >
+                                View
+                              </Link>
                             </Button>
                           </td>
                         </tr>
@@ -318,3 +325,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
