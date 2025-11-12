@@ -1,4 +1,4 @@
-# VeriCV   
+# VeriCV 
 **AI Powered Resume Intelligence Platform**
 
 ## https://bind.link/@vericv
