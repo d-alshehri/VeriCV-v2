@@ -1,11 +1,15 @@
 # VeriCV   
 **AI-Powered Resume Intelligence Platform**
 
+## https://bind.link/@vericv
+
 ###  Holberton School Saudi Arabia — Cohort 1 (Feb – Nov 2025)
 **Team Members**  
 - Leen Mohammed Alsaleh — [10691@holbertonstudents.com](mailto:10691@holbertonstudents.com)  
 - Haneen Nasser Aldawood — [10684@holbertonstudents.com](mailto:10684@holbertonstudents.com)  
 - Danah Khaled Alshehri — [10674@holbertonstudents.com](mailto:10674@holbertonstudents.com)
+
+
 
 ---
 
