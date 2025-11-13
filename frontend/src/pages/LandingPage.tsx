@@ -9,7 +9,7 @@ const LandingPage = () => {
     {
       icon: Upload,
       title: "Upload CV",
-      description: "Add your CV in PDF or Word format.",
+      description: "Add your CV in PDF format.",
     },
     {
       icon: Brain,
