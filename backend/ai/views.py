@@ -53,7 +53,7 @@ def generate_questions_view(request):
         questions = generate_questions_from_cv(text)
         questions = _normalize_questions(questions)
 
-        # ✅ Add inferred skill + category if missing
+        #  Add inferred skill + category if missing
         for q in questions:
             qtext = q.get("question", "")
             if "skill" not in q or not q.get("skill"):
