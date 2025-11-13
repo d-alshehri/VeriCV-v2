@@ -158,7 +158,63 @@ Write feedback that:
         return f"Error while generating feedback: {response.text}"
 
 
-# --- Job Match Analysis (Placeholder for AI Team) ---
+def _parse_match_score(value):
+    """Parse match score from various formats and clamp to 0..100.
+
+    Accepts int, float, or strings like "78", "78.5", "78%".
+    Returns an int or None if parsing fails.
+    """
+    try:
+        if isinstance(value, (int, float)):
+            return max(0, min(100, int(round(float(value)))))
+        if isinstance(value, str):
+            m = re.search(r"(\d+(?:\.\d+)?)", value)
+            if m:
+                return max(0, min(100, int(round(float(m.group(1))))))
+    except Exception:
+        pass
+    return None
+
+
+def _tokenize(text):
+    tokens = re.findall(r"[A-Za-z0-9+#\.\-]+", (text or "").lower())
+    # Lightweight stopword filter to reduce noise
+    stop = {
+        "the","and","for","with","that","this","your","you","are","our","job","role","a","an","to","of","in","on","as","by","be","is","at","we","us","they","he","she","it","from","or","will","have","has","had","not","but","if","then","than","into","within","per","about","over","under","across","into","out","up","down"
+    }
+    return {t for t in tokens if len(t) > 2 and t not in stop}
+
+
+def _compute_fallback_match(cv_text, job_description, position):
+    """Heuristic match score and missing keywords if AI is unavailable.
+
+    Computes overlap between JD and CV tokens + position bonus.
+    """
+    cv_tokens = _tokenize(cv_text)
+    jd_tokens = _tokenize(job_description)
+    pos_tokens = _tokenize(position)
+
+    if not jd_tokens:
+        return 0, []
+
+    overlap = len(cv_tokens & jd_tokens)
+    base = int(round((overlap / max(len(jd_tokens), 1)) * 100))
+
+    # Small bonus if position tokens appear in CV
+    pos_overlap = len(cv_tokens & pos_tokens)
+    bonus = min(10, pos_overlap * 3)
+
+    score = max(0, min(100, base + bonus))
+
+    # Missing keywords: top terms in JD not present in CV (limit 10)
+    missing = [t for t in jd_tokens if t not in cv_tokens]
+    # Prefer more "important" looking tokens (longer first)
+    missing.sort(key=lambda x: (-len(x), x))
+    missing = missing[:10]
+
+    return score, missing
+
+
 # --- Job Match Analysis (AI-Powered + Improvement Advice) ---
 def analyze_job_match(cv_text, job_description, position):
     """
@@ -223,23 +279,49 @@ Example:
             if match:
                 content = match.group(1).strip()
             result = json.loads(content)
+
+            # Robust score parsing with fallbacks
+            score = _parse_match_score(
+                result.get("match_score")
+                or result.get("score")
+                or result.get("match")
+                or result.get("compatibility")
+            )
+
+            missing = result.get("missing_keywords", [])
+            if isinstance(missing, str):
+                # Accept comma-separated string
+                missing = [s.strip() for s in missing.split(",") if s.strip()]
+            if not isinstance(missing, list):
+                missing = []
+
+            if score is None:
+                # Derive fallback score and missing keywords
+                score, derived_missing = _compute_fallback_match(cv_text, job_description, position)
+                if not missing:
+                    missing = derived_missing
+
             return {
-                "match_score": int(result.get("match_score", 0)),
-                "missing_keywords": result.get("missing_keywords", []),
+                "match_score": int(score if score is not None else 0),
+                "missing_keywords": missing,
                 "summary": result.get("summary", "No feedback provided."),
                 "improvement_advice": result.get("improvement_advice", "No advice provided.")
             }
         except Exception as e:
             logger.error(f"Job match parsing error: {e}")
+            score, missing = _compute_fallback_match(cv_text, job_description, position)
             return {
-                "match_score": 0,
-                "missing_keywords": [],
-                "summary": "Error reading AI response."
+                "match_score": int(score),
+                "missing_keywords": missing,
+                "summary": "Generated via fallback heuristic due to AI parsing error.",
+                "improvement_advice": "Add missing keywords and align CV with the job description to improve the score."
             }
     else:
         logger.error(f"Groq API Error ({response.status_code}): {response.text}")
+        score, missing = _compute_fallback_match(cv_text, job_description, position)
         return {
-            "match_score": 0,
-            "missing_keywords": [],
-            "summary": "AI service unavailable."
+            "match_score": int(score),
+            "missing_keywords": missing,
+            "summary": "Generated via fallback heuristic due to AI service unavailability.",
+            "improvement_advice": "Add missing keywords and align CV with the job description to improve the score."
         }
