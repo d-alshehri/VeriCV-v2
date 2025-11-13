@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# --- Extract Text ---
+# -- Extract Text --
 def extract_text_from_pdf(file):
     """Extract text from a PDF file (supports OCR for scanned resumes)."""
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
